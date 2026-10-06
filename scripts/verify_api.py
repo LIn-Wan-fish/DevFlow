@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import UTC, datetime
 
 import httpx
 
@@ -197,7 +198,11 @@ def main() -> int:
         check("运行结束后沉淀出记忆候选", bool(mem["candidates"]),
               f"{len(mem['candidates'])} 条待批准")
 
-        recall_payload = {"session_id": "verify-mem-recall", "repo_id": 1,
+        # 会话键必须**每轮唯一**。原先写死 "verify-mem-recall",于是每跑一次验收
+        # 就往同一个会话里多攒 11 轮对话;攒到历史把 8000 token 的上下文预算吃满之后,
+        # 记忆证据会被整个挤掉,这条「新会话能召回记忆」的断言就开始假失败(实测踩到)。
+        run_stamp = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
+        recall_payload = {"session_id": f"verify-mem-recall-{run_stamp}", "repo_id": 1,
                           "message": "再讲讲 CI #512 的失败原因", "role": "member"}
         if not mem["entries"]:
             ctx = next((p for k, p in sse(client, recall_payload) if k == "context"), {})
@@ -212,7 +217,7 @@ def main() -> int:
                                    json={"approved_by": "member"})
             check("人工批准记忆候选", approved.status_code == 200)
 
-            recall_payload["session_id"] = "verify-mem-recall-after"
+            recall_payload["session_id"] = f"verify-mem-recall-after-{run_stamp}"
             ctx = next((p for k, p in sse(client, recall_payload) if k == "context"), {})
             check("批准后新会话能召回该记忆", ctx.get("memory_hits", 0) >= 1,
                   f"memory_hits={ctx.get('memory_hits')}")

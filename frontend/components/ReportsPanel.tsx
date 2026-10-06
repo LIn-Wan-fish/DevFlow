@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import Markdown from "@/components/Markdown";
 import { api } from "@/lib/api";
 
 type Report = {
@@ -103,7 +104,7 @@ export default function ReportsPanel({ repoId }: { repoId: number }) {
 
       {body ? (
         <div className="max-h-72 overflow-auto rounded border border-line bg-canvas p-2">
-          <pre className="whitespace-pre-wrap text-[11px] leading-relaxed">{body.body}</pre>
+          <Markdown>{body.body}</Markdown>
         </div>
       ) : null}
     </div>

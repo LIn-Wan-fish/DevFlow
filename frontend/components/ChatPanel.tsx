@@ -7,6 +7,7 @@ import { streamChat } from "@/lib/sse";
 import type { ChatMessage, SseEvent } from "@/lib/types";
 import DraftCard from "./DraftCard";
 import EvidenceList from "./EvidenceList";
+import Markdown from "./Markdown";
 import RunTrace from "./RunTrace";
 
 const QUICK_PROMPTS = [
@@ -192,8 +193,12 @@ export function ChatPanel({
             ) : (
               <div className="max-w-[95%] rounded border border-line bg-canvas p-2">
                 {message.content || message.streamingText ? (
-                  <div className="whitespace-pre-wrap text-[12px] leading-relaxed">
-                    {message.content || message.streamingText}
+                  <div className="text-[12px] leading-relaxed">
+                    {/* 模型输出的是 markdown,按纯文本直出会看到一堆 ** 和 | 符号。
+                        流式期间也会渲染 —— 半截的代码围栏由组件内部兜底。 */}
+                    <Markdown streaming={message.streaming && !message.content}>
+                      {message.content || message.streamingText || ""}
+                    </Markdown>
                     {message.streaming && !message.content ? (
                       <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-ink align-text-bottom" />
                     ) : null}
