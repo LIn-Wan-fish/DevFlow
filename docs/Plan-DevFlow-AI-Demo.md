@@ -3279,3 +3279,94 @@ member 确认 -> HTTP 502
 
 - `sync_repo` 必须带 `state=all`(handler 里直接断言),且已合并的 PR 要进库
 - 写操作执行失败 → **502** + 草稿 `failed` + `failed` 审计
+---
+
+# 补充记录八:令牌权限生效,闭环在真实 GitHub 上打通(2026-10-06)
+
+用户补上了令牌权限(第 3 步),本轮验证结果:**闭环真的通了**,并且又修掉一个记账缺口。
+
+## 权限核查:这次是真的生效了
+
+用**无副作用**的方法验证(挂一个不存在的标签:有权限返回 200 且什么都不加,没权限 403):
+
+| 能力 | 之前 | 现在 |
+|---|---|---|
+| 写 Issue 评论 / 管标签 | ❌ 403 | ✅ **200** |
+| 开 PR | ❌ 403 | ✅ **实际开出 PR #7** |
+| 写 `.github/workflows/` | ❌ 403 | ❌ 仍无 |
+| Secrets | ❌ 403 | ❌ 仍无 |
+| 创建仓库 | ❌ 403 | ❌ 仍无 |
+
+**顺带开出了 PR #7**(`demo/dark-mode-css` → `master`),于是工作台终于有了一个**待审的真实 PR**:
+
+```
+总览: open_issues=5  prs_pending_review=1  merged_prs=1  failed_ci=6
+PR: #7 [open]  styles/dark-mode.css (+45/-0)
+    #6 [closed] merged=True  README.md (+22/-0)
+```
+
+## 闭环在真实 GitHub 上跑通了
+
+```
+① 生成草稿      draft_id=1  comment_on_issue → issue#1  status=pending  (未执行)
+② viewer 确认   -> 403 角色 'viewer' 无权执行 'comment_on_issue'
+③ member 确认   -> 200  status=executed
+④ 审计          [executed] comment_on_issue → issue#1 by member
+                [denied  ] comment_on_issue → issue#1 by viewer
+```
+
+**决定性证据 —— 评论真的出现在 GitHub 上**:
+
+```
+Issue #1 的评论数 = 1
+  id=6012127420  by LIn-Wan-fish
+  内容: 这条评论由 DevFlow AI 生成草稿,等待人工确认后再提交。
+  https://github.com/LIn-Wan-fish/portfolio-demo/issues/1#issuecomment-6012127420
+```
+
+整条链路:Agent 生成草稿 → 写操作闸门(只有草稿,不自动执行)→ 越权被拒并留痕 →
+人工确认 → **真实调用 GitHub REST** → 结果留痕。**这才是「写操作只出草稿」这句话的完成态。**
+
+## 旗舰问句在真实数据上的表现
+
+问:「检查当前 Issue、PR 和失败 CI,判断这个版本是否可以发布」
+
+四个任务全部 `succeeded`(issue #1 / PR #7 / CI run / synthesis),
+Observer 报出 **5 条冲突**,其中两条是真实数据才能暴露的:
+
+> - `pr_review_agent` **内部结论与自身 findings 冲突**:decision=merge,
+>   但 findings 同时指出『合入后深色模式不会在页面上生效』『手动切换在浅色系统下不会生效』,
+>   即合入的是一个不生效的资源,存在功能未完成却判定可合入的矛盾。
+> - PR #7 标题称『对应 Issue #5』,而 related_issues 为空数组、输入中也无 Issue #5。
+
+Synthesis 的结论逐条正面回应了这 5 条冲突,并且推理是对的:
+
+> 「可合入」只说明 PR #7 这个变更本身不构成 code review 阻塞,**不等于「可发布」**;
+> 本次发布决策由部署链路状态决定。
+>
+> 采信 findings 的事实:PR #7 合入的是一个**未接入、默认不生效**的静态资源文件;
+> 但该事实不推翻 merge 判定,因为它不破坏既有功能、risk_level=low。
+
+还引用了真实物件:`run 30158064097`、`commit cfe886da39c74368623c7e59754367dd3e64083b`,
+并给出 8 条可执行下一步。
+
+## 修掉的记账缺口:工作流路径的 token 恒为 0
+
+真实跑完一次旗舰问句,`AgentRun.total_tokens` 是 **0**。原因:
+工作流各 Agent 走的是**结构化输出**(json_mode),而不是流式聊天模型,
+上一轮加的记账只覆盖了 `ChatAgent._stream_message` 那条路径。
+
+修法:在 `llm.py` 加一个用量收集器,用 **contextvar 装一个可变列表**
+(关键点:int 在子任务里 `set` 不会回传父任务,但列表是共享引用 ——
+`asyncio.gather` 派生的子任务 append 进的是同一个列表,这正是工作流并发跑 Agent 的场景)。
+结构化模型的每次调用记账,Mock 的结构化路径也补上确定性用量。
+
+## 第 6 步:仍缺远端仓库
+
+令牌没有 `repository_creation`,我建不了仓库。本地已经就绪:
+
+- `git init` + 2 个提交,228 个文件
+- `.env`(含 API key 与 PAT)、`node_modules/`、`.next/`、加速器根证书全部正确忽略
+- exFAT 不记录属主,已加 `safe.directory`
+
+**只差用户建一个空仓库。**

@@ -247,3 +247,18 @@ async def test_工作流被取消时不发起规划调用(db_with_snapshot, repo
 
     assert outcome.status == "cancelled"
     assert outcome.tasks == [], "取消后不应产出任务"
+
+async def test_工作流路径也统计_token_用量(db_with_snapshot, repo_id):
+    """回归:工作流各 Agent 走**结构化输出**,不走流式聊天模型 ——
+
+    那条路径原先完全没有记账,于是真实模型跑完一次旗舰问句,
+    AgentRun.total_tokens 恒为 0(实测踩到)。
+    """
+    outcome = await ChatAgent().run(
+        db_with_snapshot, repo_id=repo_id,
+        question="检查当前 Issue、PR 和失败 CI,判断这个版本是否可以发布",
+        history=[], emit=lambda *a: None)
+
+    assert outcome.stop_reason == "completed"
+    assert outcome.tool_calls, "应当走了工作流"
+    assert outcome.total_tokens > 0, "结构化输出那条路径的用量也要计入"

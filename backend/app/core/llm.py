@@ -14,9 +14,11 @@ ChatAgent 的工具循环、max_steps 上限、重复调用拦截、工具错误
 
 from __future__ import annotations
 
+import contextvars
 import json
 import re
-from typing import Any
+from contextlib import contextmanager
+from typing import Any, Iterator
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
@@ -442,7 +444,22 @@ class DeterministicChatModel(BaseChatModel):
         if self.role in (None, AgentRole.CHAT.value):
             # chat_agent 不做结构化输出,这里显式拒绝,避免调用方以为能拿到对象
             raise NotImplementedError("DeterministicChatModel: chat_agent 不支持结构化输出")
-        return RunnableLambda(lambda payload: _structured_from_evidence(schema, _as_messages(payload)))
+        def _run(payload: Any) -> BaseModel:  # noqa: ANN401
+            from app.rag.splitter import rough_token_count
+
+            messages = _as_messages(payload)
+            obj = _structured_from_evidence(schema, messages)
+            # Mock 的结构化路径也要上报用量:否则工作流那条链路在 Mock 模式下
+            # token 记账恒为 0,这块就没法在单测里验证。
+            prompt = " ".join(str(m.content) for m in messages if isinstance(m.content, str))
+            _record_usage(AIMessage(content=obj.model_dump_json(), usage_metadata={
+                "input_tokens": rough_token_count(prompt),
+                "output_tokens": rough_token_count(obj.model_dump_json()),
+                "total_tokens": rough_token_count(prompt) + rough_token_count(obj.model_dump_json()),
+            }))
+            return obj
+
+        return RunnableLambda(_run)
 
     def _generate(  # noqa: ANN001
         self,
@@ -490,6 +507,45 @@ def _as_messages(payload: Any) -> list[BaseMessage]:
     if isinstance(payload, dict):
         return [HumanMessage(json.dumps(payload, ensure_ascii=False))]
     return [HumanMessage(str(payload))]
+
+
+# 结构化输出路径的用量收集器。
+#
+# 用 contextvar 装一个**可变列表**而不是标量:int 在子任务里 set 不会回传父任务,
+# 但列表对象是共享引用 —— asyncio.gather 派生的子任务 append 进的是同一个列表。
+# 工作流里各 Agent 是并发跑的,正是这个场景。
+_usage_sink: contextvars.ContextVar[list[int] | None] = contextvars.ContextVar(
+    "devflow_usage_sink", default=None
+)
+
+
+@contextmanager
+def collect_usage() -> Iterator[list[int]]:
+    """收集这段代码里所有结构化模型调用上报的 token 用量。"""
+    sink: list[int] = []
+    token = _usage_sink.set(sink)
+    try:
+        yield sink
+    finally:
+        _usage_sink.reset(token)
+
+
+def _record_usage(message: Any) -> None:
+    sink = _usage_sink.get()
+    if sink is None:
+        return
+    if (used := _usage_of_message(message)):
+        sink.append(used)
+
+
+def _usage_of_message(message: Any) -> int:
+    meta = getattr(message, "usage_metadata", None)
+    if not isinstance(meta, dict):
+        return 0
+    try:
+        return int(meta.get("total_tokens") or 0)
+    except (TypeError, ValueError):
+        return 0
 
 
 def _chat_result(message: AIMessage, messages: list[BaseMessage] | None = None) -> ChatResult:
@@ -635,6 +691,7 @@ def _make_json_structured_model(schema: type[BaseModel], base) -> Runnable:  # n
         # 3 次:实测真实模型偶发连续两次产出不合法 JSON,第三次通常能修回来
         for _ in range(3):
             response = await model.ainvoke(messages)
+            _record_usage(response)
             text = response.content if isinstance(response.content, str) else str(response.content)
             try:
                 return schema.model_validate_json(_extract_json(text))

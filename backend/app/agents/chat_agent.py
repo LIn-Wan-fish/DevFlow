@@ -21,7 +21,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.core.llm import get_chat_model
+from app.core.llm import collect_usage, get_chat_model
 from app.core.prompts.chat import CHAT_SYSTEM
 from app.observability.events import emit_event
 from app.core.workflow_rules import needs_workflow, pick_tool, tool_args, wants_draft
@@ -173,7 +173,11 @@ class ChatAgent:
                                     "cancelled", 0)
             args = {"question": question}
             await emit_event(emit, "tool_call", {"tool": "run_workflow", "args": args, "step": 1})
-            result = await execute("run_workflow", args, ctx)
+            # 工作流里的各 Agent 走**结构化输出**,不走流式聊天模型 ——
+            # 用量要在那边单独收集,否则真实模型跑完一次旗舰问句,token 记账是 0。
+            with collect_usage() as usage_sink:
+                result = await execute("run_workflow", args, ctx)
+            self._total_tokens += sum(usage_sink)
             records.append(ToolCallRecord(tool="run_workflow", args=args,
                                           summary=result.summary, step=1, data=result.data))
             await emit_event(emit, "tool_result", {
