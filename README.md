@@ -83,7 +83,7 @@ pwsh -File scripts/verify.ps1      # Windows
 
 | 项 | mock 模式(默认) | 真实模型(deepseek-flash) |
 |---|---|---|
-| 后端单测 | 216 passed | 216 passed |
+| 后端单测 | 222 passed | 216 passed |
 | 前端单测 | 23 passed | 23 passed |
 | 全链路 HTTP 验收 | **FAIL=0** | **FAIL=0** |
 | Agent Eval | 10/10 | **10/10** |
@@ -186,7 +186,7 @@ backend/
     eval/           # 硬规则 + 评测执行器
     github/  mcp/  skills/
   data/snapshot/    # 内置研发数据(自洽的一条故事线)
-  tests/            # 216 个单测,全 Mock(含 GitHub 适配器离线测试)
+  tests/            # 222 个单测,全 Mock(含 GitHub 适配器离线测试)
 frontend/
   app/              # 工作台 / RAG 召回测试 / Evals
   components/       # 三栏工作台与执行轨迹渲染

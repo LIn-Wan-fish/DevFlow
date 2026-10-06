@@ -63,7 +63,7 @@ async def test_评测集十题全部通过并落库(db_with_snapshot, indexed_st
 
 async def test_mock_模式显式跳过_ragas_而不是造假数字(db_with_snapshot, indexed_store):
     result = await run_eval(db_with_snapshot, DATASET, mode="mock")
-    assert result.metrics.get("ragas") == "skipped (mock mode)"
+    assert "skipped" in result.metrics.get("ragas", ""), "mock 模式必须显式跳过而不是编数字"
 
 
 async def test_可重复运行且结果一致(db_with_snapshot, indexed_store):
@@ -142,3 +142,46 @@ async def test_synthesis_失败时降级而不是整体崩(db_with_snapshot, rep
     assert outcome.answer.strip(), "不能返回空结论"
     # 各维度任务确实跑过了,结论里应当带上它们的原始结论
     assert any(t["status"] == "succeeded" for t in outcome.tasks)
+
+# --------------------------------------------------------------------------- RAGAS
+
+
+async def test_ragas_mock_模式如实跳过(db_with_snapshot, repo_id):
+    """判分必须由真实模型做 —— mock 模式下跑出来的数字没有意义,如实跳过。"""
+    from app.eval import ragas_runner
+
+    metrics = await ragas_runner.run(db_with_snapshot, repo_id, "mock")
+    assert "skipped" in metrics["ragas"]
+    assert "ragas_scores" not in metrics
+
+
+async def test_ragas_未配置服务时如实报_unavailable(db_with_snapshot, repo_id, monkeypatch):
+    """连不上评测器就是连不上,不能让整个 eval 挂掉,更不能编指标。"""
+    from app.config import settings
+    from app.eval import ragas_runner
+
+    monkeypatch.setattr(settings, "ragas_eval_url", "")
+    metrics = await ragas_runner.run(db_with_snapshot, repo_id, "openai")
+    assert "unavailable" in metrics["ragas"]
+    assert "未配置" in metrics["ragas"]
+
+
+async def test_ragas_服务不可达时不抛异常(db_with_snapshot, repo_id, monkeypatch):
+    from app.config import settings
+    from app.eval import ragas_runner
+
+    # 指向一个不存在的端口:必须被兜住并如实报告
+    monkeypatch.setattr(settings, "ragas_eval_url", "http://127.0.0.1:1")
+    metrics = await ragas_runner.run(db_with_snapshot, repo_id, "openai")
+    assert "unavailable" in metrics["ragas"]
+
+
+def test_rag_评测集有_ground_truth():
+    """RAGAS 的 context_recall 需要 ground_truth,缺了就算不出来。"""
+    import json
+    from pathlib import Path
+
+    cases = json.loads(Path("tests/data/rag_eval_cases.json").read_text(encoding="utf-8"))
+    assert len(cases) >= 5
+    for case in cases:
+        assert case.get("question") and case.get("ground_truth"), case.get("key")

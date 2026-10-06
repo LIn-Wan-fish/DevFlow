@@ -3370,3 +3370,75 @@ Synthesis 的结论逐条正面回应了这 5 条冲突,并且推理是对的:
 - exFAT 不记录属主,已加 `safe.directory`
 
 **只差用户建一个空仓库。**
+---
+
+# 补充记录九:补文章所述功能(一)—— RAGAS 接入(2026-10-06)
+
+用户要求「实现文章里所说的全部功能」。把文章配图里的功能清单逐条对照实现后,
+确认**除面试准备外只差 4 项**,这是第 1 项。文章 7.5 节明确写着
+「RAG 改完以后怎么确认真的变好了:**固定评测集、硬规则与 RAGAS**」,
+而此前系统一直如实报 `unavailable (未安装 ragas)`。
+
+## 卡点:ragas 与本项目的 langchain 栈无法共存
+
+实测三种情况,没有一种能直接装进主程序:
+
+| ragas 版本 | 结果 |
+|---|---|
+| 0.2 / 0.3 / 0.4 | **导入即崩** —— 引用 `langchain_community.chat_models.vertexai`(该模块已被移除) |
+| 0.1.22 | 能导入,但把 `langchain` 从 **1.4.3 强降到 0.2.17**,主程序随即崩在 `Reviver.__init__() got an unexpected keyword argument 'allowed_objects'` |
+
+也就是说:装新版主程序起不来,装老版也一样。这是**上游依赖冲突**,硬凑没有出路。
+
+## 解法:把评测依赖隔离到独立容器
+
+新增第 7 个服务 `services/ragas_eval/`(ragas 0.1.22 + langchain 0.2.x 锁死),
+主程序通过 HTTP 调它(`RAGAS_EVAL_URL`)。依赖冲突被限制在一个可丢弃的边界内:
+
+```
+backend    : langchain 1.4.3 / langchain-core 1.6.6   ← 不受影响
+ragas-eval : ragas 0.1.22  / langchain 0.2.17         ← 自带一套依赖
+```
+
+**评测数据流**:主程序对固定评测集逐题跑 `hybrid_search` 取上下文 →
+用「只依据证据作答」的 prompt 生成答案 → 连同 `ground_truth` 一起 POST 给评测器 →
+返回 faithfulness / context_precision / context_recall。
+
+评测集是新增的 `tests/data/rag_eval_cases.json`(6 条,ground_truth 全部来自快照语料),
+**刻意不复用 ChatAgent** —— 让它调工具、做多轮会引入与检索质量无关的变量。
+
+## 两个诚实性处理
+
+**① NaN 不许静默变成 null。** 实测 `faithfulness` 在 DeepSeek 上偶发返回 NaN,
+底层报的是 `No statements were generated from the answer`(ragas 的 statement 生成器
+解析不了该模型的输出格式)。原先这会让指标变成 `null`,调用方无从判断是数据问题还是解析问题。
+现在 NaN 一律转成**带原因的 skipped**:
+
+```
+"skipped": ["faithfulness(ragas 返回 NaN:该指标依赖模型按固定格式输出陈述句,本模型未产出可解析结果)"]
+```
+
+**② 算不了的指标说明为什么。** `answer_relevancy` 需要真实嵌入端点,
+而当前 `EMBED_MODE=mock`,所以它被明确列进 `skipped` 并写清原因 ——
+不会用假向量凑一个数字出来。
+
+实测输出(真实模型):
+
+```json
+{"status": "ok", "ragas_version": "0.1.22", "samples": 6,
+ "scores": {"faithfulness": 1.0, "context_precision": 1.0, "context_recall": 1.0},
+ "skipped": ["answer_relevancy(需要真实嵌入端点,当前 EMBED_MODE=mock)"]}
+```
+
+## 顺带解决:构建期网络
+
+ragas 容器构建时直连 `files.pythonhosted.org` **读超时**(本机网络环境)。
+把索引做成可配置的 build arg(`PIP_INDEX_URL`),本机用阿里云源构建成功。
+默认仍是官方源,不写死任何镜像。
+
+## 回归用例
+
+- mock 模式如实跳过(不跑无意义的判分)
+- 未配置 `RAGAS_EVAL_URL` → `unavailable` 且说明原因
+- 评测器不可达 → **不抛异常**,如实报告(评测器挂了不能带崩整个 eval)
+- RAG 评测集每条都有 `ground_truth`(否则 context_recall 算不出来)

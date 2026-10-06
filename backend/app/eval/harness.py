@@ -15,6 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.agents.chat_agent import ChatAgent
+from app.config import settings
 from app.db import models as m
 from app.eval import ragas_runner
 from app.eval.rules import Trace, check
@@ -134,7 +135,18 @@ async def run_eval(db: Session, dataset_path: str | Path, mode: str = "mock",
         ))
 
     passed_count = sum(1 for c in results if c.passed)
-    metrics = ragas_runner.run(cases, mode)
+
+    # 内置评测集(tests/data/eval_cases.json)是**针对快照数据**写的:
+    # 里面引用的 Issue #24 / PR #12 / CI #512 与快照语料,在真实 GitHub 仓库里不存在。
+    # 在 github 模式下跑它只会得到一堆「数据缺失」的失败,看不出是模式问题,
+    # 所以显式提示一句。
+    if settings.data_source != "snapshot":
+        metrics["eval_dataset_note"] = (
+            f"当前 DATA_SOURCE={settings.data_source},而内置评测集是针对快照数据编写的;"
+            "这些失败大概率是模式不匹配,不是系统缺陷。"
+        )
+    # RAGAS 走独立评测容器;拿不到就如实报告 unavailable
+    metrics = await ragas_runner.run(db, repo_id, mode)
 
     run.passed = passed_count
     run.failed = len(results) - passed_count

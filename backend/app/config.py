@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     max_replan: int = 2
     workflow_parallelism: int = 4
 
+    # ---- 评测 ----
+    # RAGAS 评测器的地址。**它跑在独立容器里**:ragas 与本项目的 langchain 1.x 栈
+    # 无法共存(新版导入即崩、老版强降 langchain 把主程序打挂),详见 services/ragas_eval/app.py。
+    # 留空或连不上时,eval 会如实报告 unavailable,不编造指标。
+    ragas_eval_url: str = ""
+
     # ---- 权限 ----
     # 形如 "member:tok1,maintainer:tok2"。留空 = 演示模式(无认证,客户端可自称角色),
     # /api/auth/me 会如实报告 enforced=false

@@ -1,0 +1,32 @@
+[
+  {
+    "key": "api-refresh-token",
+    "question": "token 过期了应该怎么办?",
+    "ground_truth": "用 refresh_token 调用 POST /api/auth/refresh 换取新的访问令牌;如果 refresh_token 也过期,就跳回登录页让用户重新登录。"
+  },
+  {
+    "key": "api-error-codes",
+    "question": "登录接口都会返回哪些错误码?",
+    "ground_truth": "400 请求体缺字段;401 凭据错误或 token 过期;429 触发登录频率限制;500 服务端异常。"
+  },
+  {
+    "key": "api-security-compare",
+    "question": "密码比较有什么安全要求?",
+    "ground_truth": "必须使用常量时间比较函数,禁止明文比较,因为明文比较会因提前返回而泄露密码前缀。"
+  },
+  {
+    "key": "design-session-split",
+    "question": "认证层的 login 和 session 是怎么分工的?",
+    "ground_truth": "auth/login 负责凭据校验,auth/session 负责会话生命周期,也就是签发、续期和失效。"
+  },
+  {
+    "key": "design-token-cleanup",
+    "question": "为什么 token 过期时要清理旧 session?",
+    "ground_truth": "旧实现里 token 过期后仍复用原 session 对象,导致 refresh 分支读到已失效的会话,表现为刷新令牌后依然 401;v1.2 改为过期即清理并签发新会话。"
+  },
+  {
+    "key": "design-test-strategy",
+    "question": "登录链路需要什么测试?",
+    "ground_truth": "必须有集成测试覆盖三条路径:密码错误、token 过期、正常登录;纯单元测试覆盖不到 session 存储与 login 层的交互。"
+  }
+]

@@ -211,7 +211,7 @@ def test_评测接口十题全通过(client):
     body = client.post("/api/eval/run", json={"mode": "mock"}).json()
     assert body["total"] == 10, body
     assert body["passed"] == 10, [c["key"] for c in body["cases"] if not c["passed"]]
-    assert body["metrics"]["ragas"] == "skipped (mock mode)"
+    assert "skipped" in body["metrics"]["ragas"], "mock 模式必须显式跳过而不是编数字"
 
     runs = client.get("/api/eval/runs").json()
     assert runs and runs[0]["passed"] == 10
