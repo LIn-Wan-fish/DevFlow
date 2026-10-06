@@ -8,9 +8,15 @@ type Props = {
   repos: Repo[];
   activeRepoId: number;
   sessions: SessionNode[];
+  /**
+   * 当前选中的会话,**形如 `仓库id:会话id`**。
+   *
+   * 原先这里存的是会话**标题**,而不同项目下都有叫「默认会话」的会话 ——
+   * 于是点一个会把所有同名的都点亮。标题是给人看的,不该拿来当身份。
+   */
   activeSession: string;
   onSelectRepo: (repoId: number) => void;
-  onSelectSession: (title: string) => void;
+  onSelectSession: (sessionId: number) => void;
   onRefresh: () => void;
   onAddProject: () => void;
   /** 由拖拽决定;不传则用默认宽度 */
@@ -82,9 +88,9 @@ export function ProjectSidebar({
                 <li key={session.id}>
                   <button
                     type="button"
-                    onClick={() => onSelectSession(session.title)}
+                    onClick={() => onSelectSession(session.id)}
                     className={`flex w-full items-center justify-between rounded px-2 py-1 text-left text-[12px] ${
-                      session.title === activeSession
+                      `${repo.id}:${session.id}` === activeSession
                         ? "bg-canvas text-accent"
                         : "text-muted hover:bg-canvas"
                     }`}

@@ -32,7 +32,9 @@ export default function WorkspacePage() {
   const [ci, setCi] = useState<CiItem[]>([]);
   const [candidates, setCandidates] = useState<MemoryCandidate[]>([]);
   const [entries, setEntries] = useState<MemoryEntry[]>([]);
-  const [session, setSession] = useState("默认会话");
+  // 存的是**会话 id**,不是标题。原先存标题,而两个项目下都有「默认会话」,
+  // 于是点一个会把另一个也点亮 —— 标题是给人看的,不该当身份用。
+  const [sessionId, setSessionId] = useState(1);
   const [quoted, setQuoted] = useState("");
   const [role, setRole] = useState("member");
   const [authMode, setAuthMode] = useState<{ enforced: boolean; mode: string } | null>(null);
@@ -45,6 +47,13 @@ export default function WorkspacePage() {
     ],
     [],
   );
+
+  // 选中态用「仓库:会话」复合键 —— 会话 id 在各仓库下是从 1 开始的,光用 id 会串。
+  const activeSession = `${repoId}:${sessionId}`;
+  const sessionTitle = sessions.find((s) => s.id === sessionId)?.title ?? "默认会话";
+  // 给后端的会话键**必须带仓库**:原先直接拿标题当键,两个项目的「默认会话」
+  // 会落进同一段对话历史里 —— 这是比高亮错更严重的数据串用。
+  const chatSessionKey = `repo${repoId}-session${sessionId}`;
 
   const reload = useCallback(async () => {
     try {
@@ -94,9 +103,9 @@ export default function WorkspacePage() {
         repos={repos}
         activeRepoId={repoId}
         sessions={sessions}
-        activeSession={session}
+        activeSession={activeSession}
         onSelectRepo={setRepoId}
-        onSelectSession={setSession}
+        onSelectSession={setSessionId}
         onRefresh={() => void reload()}
         onAddProject={() => setAdding(true)}
         width={left.width}
@@ -124,7 +133,7 @@ export default function WorkspacePage() {
           <OverviewBar
             health={health}
             repo={repoName}
-            session={session}
+            session={sessionTitle}
             onRefresh={() => void reload()}
           />
         ) : (
@@ -153,7 +162,7 @@ export default function WorkspacePage() {
 
         <ChatPanel
           repoId={repoId}
-          sessionId={session}
+          sessionId={chatSessionKey}
           role={role}
           quoted={quoted}
           onQuotedConsumed={() => setQuoted("")}
