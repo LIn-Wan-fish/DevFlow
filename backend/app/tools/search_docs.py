@@ -21,15 +21,20 @@ async def search_docs(ctx: ToolContext, query: str = "", top_k: int = 6, **_: ob
             empty=True,
         )
 
+    # 只有够格的命中才挂成引用;弱命中仍然返回给模型看(它需要上下文判断),
+    # 但不作为「依据」呈现给用户 —— 少给引用比给错引用代价小。
+    citable = [ev for ev in evidence if ev.strong]
     citations = [
         {"doc_path": ev.doc_path, "heading_path": ev.heading_path,
          "score": round(ev.score, 6), "preview": ev.content[:160]}
-        for ev in evidence
+        for ev in citable
     ]
     summary = (
         f"在知识库中找到 {len(evidence)} 段相关资料,最相关的是"
         f"「{evidence[0].citation}」。"
     )
+    if not citable:
+        summary += "(这些命中与问题的相关度不足,仅供参考,不作为依据。)"
     return ToolResult(
         tool="search_docs",
         summary=summary,

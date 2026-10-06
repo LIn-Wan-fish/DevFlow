@@ -56,12 +56,25 @@ MIN_MATCHED_TERMS = 2
 MIN_COVERAGE = 0.20
 MAX_IDF = 4.0
 
+# 引用门槛:**比检索门槛更严**。
+#
+# 理由:检索是「把候选给模型看」,引用是「标成用户可查的证据」—— 这两件事的公信力要求不同。
+# 词袋匹配天生可以被「把问题拆成几个泛化词」绕过:实测离题查询
+# 「量子 系统 设计」只碰到 1~2 个真实存在的词项,却因为命中的都是文中的稀有词,
+# 覆盖率反而高达 1.00(比任何正常查询都高)。所以**覆盖率分不开**,
+# 但「查询里到底有几个词真的在语料里出现过」可以:正常查询是 3~6,这种只有 2。
+#
+# 注意这**不**影响模型拿到候选,只影响最终挂出去的引用 —— 少给引用比给错引用代价小。
+CITATION_MIN_TERMS = 3
+
 
 @dataclass
 class RankedItem:
     key: int
     score: float
     coverage: float = 0.0
+    # 本次查询里在语料中真实出现过的词项数(查询级,对同一次检索的所有结果相同)
+    present_terms: int = 0
 
 
 def rerank(
@@ -116,7 +129,8 @@ def rerank(
             continue
         # 词频密度:命中次数 / 文本长度,避免长文本靠长度取胜
         density = sum(1 for t in c_terms if t in q_terms) / len(c_terms)
-        scored.append(RankedItem(chunk_id, 0.7 * coverage + 0.3 * density * 10, coverage))
+        scored.append(RankedItem(chunk_id, 0.7 * coverage + 0.3 * density * 10, coverage,
+                                 present_terms=len(basis)))
 
     scored.sort(key=lambda item: (-item.score, item.key))
     return scored[:top_k]

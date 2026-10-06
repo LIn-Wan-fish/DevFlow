@@ -138,3 +138,38 @@ def test_正常查询不受新的绝对门槛影响(indexed):
                   "PR #12 的改动有没有风险", "refresh_token 怎么刷新"):
         hits = hybrid_search(indexed, repo_id=1, query=query, top_k=5)
         assert hits, f"正常查询不该被误判为离题:{query}"
+
+# --------------------------------------------------------------------------- 引用门槛
+
+
+@pytest.mark.parametrize("query", [
+    "量子 系统 设计",
+    "量子纠缠 系统 设计",
+])
+def test_离题查询的弱命中不挂成引用(indexed, query):
+    """回归:答案是「未找到」,下面却列着引用。
+
+    根因:词袋匹配可以被「把问题拆成几个泛化词」绕过 —— 实测「量子 系统 设计」
+    只碰到 2 个真实存在的词项,但命中的都是文中稀有词,覆盖率反而 **1.00**
+    (比任何正常查询都高,因为分母剔除了缺失词项)。所以覆盖率分不开,
+    能分开的是「查询里到底有几个词真在语料里出现过」:正常查询是 3~6,这种只有 2。
+
+    处理方式:**候选照常给模型看,但不作为依据呈现给用户** ——
+    少给引用比给错引用代价小。
+    """
+    hits = hybrid_search(indexed, repo_id=1, query=query, top_k=5)
+    assert hits, "弱命中仍然要返回给模型(它需要上下文判断)"
+    assert not any(h.strong for h in hits), "但不该挂成引用"
+
+
+@pytest.mark.parametrize("query", [
+    "CI #512 为什么失败?",
+    "登录接口是怎么实现的",
+    "token 过期后 refresh_token 怎么刷新",
+    "PR #12 的改动有没有风险",
+])
+def test_正常查询的证据仍然可引用(indexed, query):
+    """加了引用门槛不能把正常证据也拦掉。"""
+    hits = hybrid_search(indexed, repo_id=1, query=query, top_k=5)
+    assert hits
+    assert all(h.strong for h in hits), f"正常证据必须可引用:{query}"

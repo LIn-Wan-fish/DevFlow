@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.core.embeddings import embed_query
 from app.db import models as m
-from app.rag.rerank import rerank, strong_terms
+from app.rag.rerank import CITATION_MIN_TERMS, rerank, strong_terms
 from app.rag.vectorstore import get_vector_store
 
 RRF_K = 60
@@ -37,6 +37,9 @@ class Evidence:
     content: str
     score: float
     source: str = "document"  # document | memory
+    # 是否够格**挂成用户可查的引用**。注意这与「能不能返回给模型看」是两回事:
+    # 检索门槛宽松是为了不让模型缺证据,引用门槛更严是因为引用代表「这是依据」。
+    strong: bool = True
 
     @property
     def citation(self) -> str:
@@ -102,7 +105,8 @@ def keyword_search(db: Session, repo_id: int, query: str, limit: int = KEYWORD_L
     return [chunk_id for chunk_id, _ in scored[:limit]]
 
 
-def _load_evidence(db: Session, repo_id: int, chunk_ids: list[int], scores: dict[int, float]) -> list[Evidence]:
+def _load_evidence(db: Session, repo_id: int, chunk_ids: list[int], scores: dict[int, float],
+                   *, strong: bool = True) -> list[Evidence]:
     if not chunk_ids:
         return []
     rows = db.scalars(
@@ -126,6 +130,7 @@ def _load_evidence(db: Session, repo_id: int, chunk_ids: list[int], scores: dict
                 heading_path=chunk.heading_path,
                 content=chunk.content,
                 score=scores.get(chunk_id, 0.0),
+                strong=strong,
             )
         )
     return evidence
@@ -171,4 +176,11 @@ def hybrid_search(db: Session, repo_id: int, query: str, top_k: int = 6) -> list
         return []
     fused_scores = dict(fused)
     ordered = [item.key for item in ranked]
-    return _load_evidence(db, repo_id, ordered, {cid: fused_scores.get(cid, 0.0) for cid in ordered})
+    # 引用门槛:查询里真实出现在语料中的词项太少时,这些命中只作「给模型看的候选」,
+    # 不挂成引用。实测离题查询「量子 系统 设计」只有 2 个存在词项,却因覆盖率虚高
+    # (分母剔除了缺失词项)而拿到 1.00 —— 必须在这里拦住,否则答案是「未找到」、
+    # 下面却列着引用。
+    citation_grade = bool(ranked) and ranked[0].present_terms >= CITATION_MIN_TERMS
+    return _load_evidence(db, repo_id, ordered,
+                          {cid: fused_scores.get(cid, 0.0) for cid in ordered},
+                          strong=citation_grade)
