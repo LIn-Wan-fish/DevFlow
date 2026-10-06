@@ -17,12 +17,14 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     String,
     Text,
     UniqueConstraint,
 )
+from sqlalchemy import event
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.db.base import Base
@@ -424,3 +426,62 @@ class WeeklyReport(Base, TimestampMixin):
     merged_prs: Mapped[int] = mapped_column(Integer, default=0)
     failed_ci: Mapped[int] = mapped_column(Integer, default=0)
     generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+class FindingStatus(StrEnum):
+    """发现的成熟度。对应 Plastic 的「变更集 vs 搁置集」。"""
+
+    TENTATIVE = "tentative"      # 搁置集:还没定论,别的 Agent 可以取用或接手
+    CONFIRMED = "confirmed"      # 已确认
+    SUPERSEDED = "superseded"    # 被后续发现取代(不是删掉,是留痕)
+
+
+class AgentFinding(Base, TimestampMixin):
+    """一个 Agent 的**变更集**:原子、不可变、带作者。
+
+    为什么要有这张表 —— 借鉴 Unity Version Control(Plastic SCM)的协作模型:
+
+    它的协作之所以成立,不是"大家能同时改",而是三件事:
+      1. 有一个所有协作者都读写的**共享仓库**
+      2. 改动是**带作者的最小单元**(变更集),而不是一团糊涂账
+      3. **冲突是一等公民**,被显式记录和展示,而不是悄悄吞掉
+
+    我们原先一条都不满足:每个 Agent 把结果交回 synthesis 就完了,
+    彼此看不见、也无法质疑 —— 那是流水线,不是协作。
+
+    **不可变**由 before_update 事件强制(见本文件末尾的监听器):
+    要修正只能追加一条新发现并用 `supersedes_id` 指向旧的。
+    协作历史如果可以被就地改写,它就不再是历史。
+    """
+
+    __tablename__ = "agent_findings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    run_id: Mapped[int] = mapped_column(ForeignKey("agent_runs.id"), index=True)
+    repo_id: Mapped[int] = mapped_column(ForeignKey("repos.id"), index=True)
+    # 哪个子任务产生的(可空:observer/synthesis 也会写发现)
+    task_id: Mapped[str | None] = mapped_column(String(80), nullable=True)
+
+    author: Mapped[str] = mapped_column(String(60))          # Agent 名,如 ci_debug
+    topic: Mapped[str] = mapped_column(String(200), index=True)  # 调查主题(也是锁的键)
+    conclusion: Mapped[str] = mapped_column(Text)            # 一句话结论
+    # 依据:工具返回、引用、原始片段 —— 结构化存,便于追溯「这个结论从哪来」
+    evidence: Mapped[list] = mapped_column(JSON, default=list)
+    confidence: Mapped[float] = mapped_column(Float, default=0.5)
+    status: Mapped[str] = mapped_column(String(20), default=FindingStatus.CONFIRMED.value)
+    # 引用了哪些其他发现(协作图就是靠它画出来的)
+    references: Mapped[list] = mapped_column(JSON, default=list)
+    supersedes_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+# --------------------------------------------------------------------------- 不可变性
+
+@event.listens_for(AgentFinding, "before_update")
+def _forbid_finding_update(mapper, connection, target) -> None:  # noqa: ANN001, ARG001
+    """禁止就地修改一条发现。
+
+    **写在 ORM 层而不是只靠约定**:「不可变」如果只是口头约定,迟早有人图省事
+    直接改一行,协作历史就烂了。要修正只能追加新发现 + `supersedes_id`,
+    这样「谁在什么时候推翻了什么」才是可追溯的。
+    """
+    raise ValueError(
+        "AgentFinding 不可修改。要修正请追加一条新发现,并用 supersedes_id 指向它。"
+    )

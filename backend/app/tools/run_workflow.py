@@ -16,6 +16,9 @@ async def run_workflow(ctx: ToolContext, question: str = "", **_: object) -> Too
         question=question,
         emit=ctx.emit,
         cancel=ctx.cancel,
+        # 透传 run_id:所有 Agent 的发现都要挂到同一次运行上,
+        # 这样共享发现板才有"这次协作"的边界
+        run_id=ctx.run_id,
     )
     return ToolResult(
         tool="run_workflow",

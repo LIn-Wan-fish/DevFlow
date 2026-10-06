@@ -1,0 +1,39 @@
+feat(agents): 共享发现板 —— 借鉴 Unity Version Control 的协作模型
+
+参照本机装的 Plastic SCM(即 Unity Version Control)重做多 Agent 的协作方式。
+它的协作之所以成立不是"大家能同时改",而是三件事:
+  1. 有一个所有协作者读写的共享仓库
+  2. 改动是带作者的最小单元(变更集)
+  3. 冲突是一等公民,被显式记录而不是悄悄吞掉
+我们原先一条都不满足 —— 每个 Agent 把结果交回 synthesis 就完了,那是流水线不是协作。
+
+新增:
+- models.AgentFinding:一条发现 = 一个变更集(作者/主题/结论/依据/置信度/引用/取代)。
+  **不可变由 ORM 的 before_update 强制** —— 只靠约定的话迟早有人图省事就地改一行
+- agents/board.py:共享发现板。publish/read/supersedes/conflicts/claim
+- orchestrator:dispatch 前 claim(拿不到就跳过,不重复烧模型调用),成功后 publish,
+  finally 里 release;observer 从板上读分歧点
+- run_workflow 透传 run_id,让发现归属到同一次运行
+
+两处设计上的自我修正(都是测试/实测逼出来的):
+
+1. **"被推翻"必须是派生属性**。我先写成往旧那条上写 superseded 状态,
+   但发现不可改 -> 自相矛盾。改成「有没有别的发现指向它」推导 ——
+   这也正是版本控制的做法:不改写旧提交,而是追加一个引用它的提交。
+
+2. **主题必须是被调查的对象,不是"谁在查"**。原先写成 `{agent} #{number}`,
+   后果有两个:每个 Agent 主题天然不同 -> 冲突检测永远不触发(死代码);
+   锁也拦不住"两个不同 Agent 查同一个 CI" —— 而那恰恰最容易重复烧钱。
+   改成 `issue #24` / `ci #512` / `pr #12`。
+
+实测(run_id=104):
+  主题=issue #24  作者=issue_agent    ...
+  主题=ci #512    作者=ci_debug_agent ...
+  主题=pr #12     作者=pr_review_agent ...
+在线推送 finding 事件 + 落库,均正常。
+
+诚实的边界:本次分歧点为 0,因为三个 Agent 查的是**不同对象**。
+板子只能发现"同一对象上的结论分歧";「PR 说可合入、CI 却失败」这类
+**跨对象**矛盾仍由原有硬规则负责 —— 两者互补,不是替代。
+
+测试:后端 +16(board);324 passed

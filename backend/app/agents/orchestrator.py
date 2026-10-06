@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.agents.ci_debug_agent import CIDebugAgent
 from app.agents.issue_agent import IssueAgent
+from app.agents.board import board
 from app.agents.observer import ObserverAgent, hard_rules
 from app.agents.planner import PlannerAgent
 from app.agents.pr_review_agent import PRReviewAgent
@@ -35,6 +36,15 @@ from app.observability.events import emit_event
 from app.schemas.workflow import Observation, WorkflowAgent
 
 logger = logging.getLogger(__name__)
+
+# Agent -> 它调查的**对象类型**。用于给共享发现板定主题:
+# 同一个 CI 无论被哪个 Agent 查,都该落到同一个主题上 ——
+# 否则锁拦不住重复调查,冲突检测也永远不会触发。
+SUBJECT_OF_AGENT = {
+    "issue_agent": "issue",
+    "pr_review_agent": "pr",
+    "ci_debug_agent": "ci",
+}
 
 SYNTHESIS_KEY = "synthesis"
 
@@ -170,6 +180,7 @@ async def run_workflow(
     emit,
     tracer: Any | None = None,
     cancel: asyncio.Event | None = None,
+    run_id: int | None = None,
 ) -> WorkflowOutcome:
     """跑一次多 Agent 工作流。
 
@@ -253,6 +264,25 @@ async def run_workflow(
                         "status": "skipped", "error": task["error"],
                     })
                     return
+                # 开工前先认领主题:拿不到说明另一个 Agent 正在查同一件事,
+                # 再查一遍就是重复烧模型调用(Plastic 的 checkout 是同一个意思)。
+                # 主题是**被调查的对象**,不是"谁在查"。
+                # 原先写成 `{agent} #{number}`,后果有两个:
+                #   1. 每个 Agent 的主题天然不同 -> 冲突检测永远不触发,那段代码是死的
+                #   2. 锁拦不住"两个不同 Agent 去查同一个 CI" -> 而那恰恰是最容易重复烧钱的情况
+                # 类比 Plastic:变更集是围绕**文件/分支**的,不是围绕"谁改的"。
+                subject = SUBJECT_OF_AGENT.get(task["agent"], task["agent"])
+                number = task.get("number")
+                topic = f"{subject} #{number}" if number is not None else subject
+                if not await board.claim(topic):
+                    task["status"] = "skipped"
+                    task["error"] = "同一主题已有 Agent 在调查,跳过重复执行"
+                    await emit_event(emit, "task_finished", {
+                        "task_key": task["task_key"], "agent": task["agent"],
+                        "status": "skipped", "error": task["error"],
+                    })
+                    return
+
                 task["status"] = "running"
                 task["started"] = True
                 await emit_event(emit, "tool_call", {
@@ -270,6 +300,22 @@ async def run_workflow(
                         "task_key": task["task_key"], "tool": tool, "summary": summary,
                         "evidence_refs": _refs(task),
                     })
+                    # 把结论**发布到共享发现板** —— 这是「变更集」那一层:
+                    # 带作者、带依据、落库不可改。后续 Agent 与 Observer 都读它,
+                    # 而不是各自把结果交回终点后彼此看不见。
+                    if run_id is not None:
+                        finding = board.publish(
+                            db, run_id=run_id, repo_id=repo_id,
+                            author=task["agent"], topic=topic,
+                            conclusion=summary or task["agent"],
+                            evidence=list(_refs(task)),
+                            confidence=0.7,
+                            task_id=task.get("task_key"),
+                        )
+                        await emit_event(emit, "finding", {
+                            "finding_id": finding.id, "author": finding.author,
+                            "topic": finding.topic, "conclusion": finding.conclusion,
+                        })
                 except Exception as exc:  # noqa: BLE001
                     task["status"] = "failed"
                     task["error"] = f"{type(exc).__name__}: {exc}"
@@ -277,6 +323,9 @@ async def run_workflow(
                         "task_key": task["task_key"], "tool": tool, "error": str(exc),
                     })
                 finally:
+                    # 无论成败都要放锁:不放的话这个主题在 TTL 内再也没人能动,
+                    # 而且失败是常态,不能让它变成"永久占位"。
+                    await board.release(topic)
                     await emit_event(emit, "task_finished", {
                         "task_key": task["task_key"], "agent": task["agent"],
                         "status": task["status"], "error": task.get("error"),
@@ -338,6 +387,20 @@ async def run_workflow(
         ]
 
         rules = hard_rules(results, tasks, [*degraded, *failed_errors])
+
+        # 从**共享发现板**读出分歧点。原先冲突只存在于 Observer 的记忆里,
+        # 最后混进一段文本 —— 也就是被和稀泥。现在它是结构化记录:
+        # 同一主题上有多条未推翻的发现 = 分歧,谁都改不了、删不掉。
+        board_conflicts: list[dict] = []
+        if run_id is not None:
+            try:
+                board_conflicts = board.conflicting_topics(db, run_id)
+            except Exception:  # noqa: BLE001
+                # 发现板读不出来不该把整轮工作流带崩 —— 硬规则仍然有效
+                logger.exception("读取共享发现板失败,本轮只依据硬规则判断冲突")
+            if board_conflicts:
+                await emit_event(emit, "board_conflicts", {"conflicts": board_conflicts})
+                rules = {**rules, "board_conflicts": board_conflicts}
         if cancelled():
             # 断开后不再调用模型:硬规则已经能算出冲突与缺口,再烧一次没有意义
             agent_observation = Observation()
