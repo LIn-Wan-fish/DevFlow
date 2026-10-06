@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     max_replan: int = 2
     workflow_parallelism: int = 4
 
+    # ---- 自动周报 ----
+    weekly_report_enabled: bool = True
+    # 多久检查一次是否该出周报(秒)。默认 1 小时。
+    weekly_report_check_seconds: int = 3600
+    # 周报统计窗口天数
+    weekly_report_days: int = 7
+
     # ---- 评测 ----
     # RAGAS 评测器的地址。**它跑在独立容器里**:ragas 与本项目的 langchain 1.x 栈
     # 无法共存(新版导入即崩、老版强降 langchain 把主程序打挂),详见 services/ragas_eval/app.py。

@@ -394,3 +394,33 @@ class EvalCase(Base, TimestampMixin):
     actual: Mapped[dict] = mapped_column(JSON, default=dict)
     rule_results: Mapped[list] = mapped_column(JSON, default=list)
     passed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+class ReportTrigger(StrEnum):
+    AUTO = "auto"      # 调度器自动生成
+    MANUAL = "manual"  # 人工点一下生成
+
+
+class WeeklyReport(Base, TimestampMixin):
+    """自动周报的落库形态。
+
+    周报正文同时**回写知识库**(documents + 文件),这样下一轮索引后,
+    团队的历史产出就变成可检索的资产 —— 而不只是发出去就没了。
+    """
+
+    __tablename__ = "weekly_reports"
+    # 同一个仓库、同一个周期只留一份:调度器靠它做幂等,不会重复烧一遍
+    __table_args__ = (UniqueConstraint("repo_id", "period_key", name="uq_report_period"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    repo_id: Mapped[int] = mapped_column(ForeignKey("repos.id"), index=True)
+    period_key: Mapped[str] = mapped_column(String(20))    # 例如 2026-W41
+    period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    period_end: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    trigger: Mapped[str] = mapped_column(String(20), default=ReportTrigger.AUTO.value)
+    path: Mapped[str] = mapped_column(String(500), default="")
+    summary: Mapped[str] = mapped_column(Text, default="")
+    body: Mapped[str] = mapped_column(Text, default="")
+    open_issues: Mapped[int] = mapped_column(Integer, default=0)
+    merged_prs: Mapped[int] = mapped_column(Integer, default=0)
+    failed_ci: Mapped[int] = mapped_column(Integer, default=0)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

@@ -25,7 +25,7 @@ logging.basicConfig(
 )
 
 from app.api import (auth, chat, ci, drafts, issues, mcp as mcp_api, memory, prs, rag,
-                     repos, runs, skills)
+                     reports, repos, runs, skills)
 from app.api import eval as eval_api
 from app.config import settings
 
@@ -160,17 +160,36 @@ async def _ensure_data() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ANN001, ARG001
+    import asyncio
+    import contextlib
+
+    from app.reports import scheduler
+
     _ensure_schema()
     await _ensure_data()
     _ensure_knowledge_index()
-    yield
+
+    # 自动周报:启动时先检查一次(保证不漏),之后按间隔轮询。
+    # 进程内循环,不是生产级调度 —— 边界写在 app/reports/scheduler.py 顶部。
+    stop = asyncio.Event()
+    task: asyncio.Task | None = None
+    if settings.weekly_report_enabled:
+        task = asyncio.create_task(scheduler.run(stop))
+
+    try:
+        yield
+    finally:
+        if task is not None:
+            stop.set()
+            with contextlib.suppress(Exception):
+                await asyncio.wait_for(task, timeout=10)
 
 
 app = FastAPI(title="DevFlow AI", version="0.1.0", lifespan=lifespan)
 
 for router in (chat.router, repos.router, issues.router, prs.router, ci.router,
                rag.router, drafts.router, memory.router, runs.router, eval_api.router,
-               mcp_api.router, skills.router, auth.router):
+               mcp_api.router, skills.router, auth.router, reports.router):
     app.include_router(router)
 
 
