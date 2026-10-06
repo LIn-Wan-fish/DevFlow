@@ -83,4 +83,16 @@ export const api = {
   runEval: (mode?: string) => post<EvalResult>("/api/eval/run", mode ? { mode } : {}),
   evalRuns: () => get<Record<string, any>[]>("/api/eval/runs"),
   mcpTools: () => get<{ tools: { name: string }[] }>("/api/mcp/tools"),
+  reports: (repoId: number) =>
+    get<{
+      total: number;
+      items: {
+        id: number; period_key: string; trigger: string; path: string; summary: string;
+        open_issues: number; merged_prs: number; failed_ci: number; generated_at: string;
+      }[];
+      scheduler: { enabled: boolean; check_seconds: number; days: number; current_period: string };
+    }>(`/api/reports?repo_id=${repoId}`),
+  report: (id: number) => get<{ id: number; body: string }>(`/api/reports/${id}`),
+  generateReport: (repoId: number) =>
+    post<{ id: number; body: string }>(`/api/reports/generate?repo_id=${repoId}`),
 };

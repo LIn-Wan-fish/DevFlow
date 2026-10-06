@@ -27,11 +27,15 @@ from app.reports import service
 logger = logging.getLogger(__name__)
 
 
-def check_once() -> int:
-    """检查所有仓库,给缺周报的补一份。返回本次生成的数量。"""
+def check_once(session_factory=SessionLocal) -> int:
+    """检查所有仓库,给缺周报的补一份。返回本次生成的数量。
+
+    `session_factory` 可注入:默认用真实数据库,单测里传一个产出测试会话的工厂,
+    这样调度逻辑本身也能被单测覆盖(它原先直接绑死 SessionLocal,测不到一起)。
+    """
     generated = 0
     try:
-        with SessionLocal() as db:
+        with session_factory() as db:
             for repo in db.scalars(select(m.Repo)).all():
                 if not service.is_due(db, repo.id):
                     continue

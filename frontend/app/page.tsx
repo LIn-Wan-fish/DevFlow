@@ -139,6 +139,7 @@ export default function WorkspacePage() {
       </main>
 
       <WorkspacePanel
+        repoId={repoId}
         issues={issues}
         groups={groups}
         prs={prs}

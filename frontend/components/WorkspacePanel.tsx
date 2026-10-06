@@ -2,16 +2,19 @@
 
 import { useState } from "react";
 
+import ReportsPanel from "@/components/ReportsPanel";
+
 import CiList from "./CiList";
 import IssueList from "./IssueList";
 import MemoryPanel from "./MemoryPanel";
 import PrList from "./PrList";
 import type { CiItem, IssueGroupCounts, IssueItem, MemoryCandidate, MemoryEntry, PrItem } from "@/lib/types";
 
-const TABS = ["Issue", "PR", "CI", "团队", "记忆&知识库"] as const;
+const TABS = ["Issue", "PR", "CI", "周报", "团队", "记忆&知识库"] as const;
 type Tab = (typeof TABS)[number];
 
 type Props = {
+  repoId: number;
   issues: IssueItem[];
   groups: IssueGroupCounts;
   prs: PrItem[];
@@ -31,6 +34,7 @@ const TEAM = [
 
 /** 右栏 Workspace(对应 img_01 右侧五个标签页)。 */
 export function WorkspacePanel({
+  repoId,
   issues,
   groups,
   prs,
@@ -113,6 +117,7 @@ export function WorkspacePanel({
 
         {tab === "PR" ? <PrList items={prs} onQuote={(n) => onQuote(`PR #${n} `)} /> : null}
         {tab === "CI" ? <CiList items={ci} onQuote={(n) => onQuote(`CI #${n} `)} /> : null}
+        {tab === "周报" ? <ReportsPanel repoId={repoId} /> : null}
 
         {tab === "团队" ? (
           <ul className="space-y-1">

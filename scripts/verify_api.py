@@ -243,11 +243,39 @@ def main() -> int:
               f"{evaluation['passed']}/{evaluation['total']}")
         bad_cases = [c["key"] for c in evaluation["cases"] if not c["passed"]]
         check("无失败用例", not bad_cases, ", ".join(bad_cases))
-        expected_ragas = ("skipped (mock mode)" if llm_mode == "mock"
-                          else "unavailable (未安装 ragas)")
-        check("ragas 状态如实标注,不用假数字",
-              evaluation["metrics"].get("ragas") == expected_ragas,
-              str(evaluation["metrics"].get("ragas")))
+        # ragas 的合格标准不是某个固定字符串,而是**不许出现假数字**:
+        #   要么给真实指标(ok + 有分数 + 有样本数),
+        #   要么明确说明为什么算不出来(skipped / unavailable + 原因)。
+        # 只断言等于 "unavailable" 会在 RAGAS 真正跑通之后误报失败(实测踩到)。
+        metrics = evaluation["metrics"]
+        ragas = str(metrics.get("ragas"))
+        if ragas == "ok":
+            scores = metrics.get("ragas_scores") or {}
+            honest = bool(scores) and int(metrics.get("ragas_samples") or 0) > 0
+            detail = f"ok, scores={scores}, samples={metrics.get('ragas_samples')}"
+        else:
+            honest = len(ragas) > 12  # 必须带上原因,而不是光一句 unavailable
+            detail = ragas
+        check("ragas 要么给真实指标、要么说明原因,不出现假数字", honest, detail[:160])
+
+        print()
+        print("== 11. 自动周报 ==")
+        reports = client.get(f"{API}/api/reports?repo_id=1").json()
+        check("周报列表非空(调度器启动时已补)", reports["total"] >= 1,
+              f"{reports['total']} 份")
+        sched = reports.get("scheduler") or {}
+        check("如实暴露调度配置", "enabled" in sched and "current_period" in sched,
+              f"enabled={sched.get('enabled')} period={sched.get('current_period')}")
+        first = reports["items"][0]
+        check("周报带周期键与统计", bool(first.get("period_key")) and first.get("open_issues") >= 0,
+              f"{first.get('period_key')} 未处理{first.get('open_issues')}/合并{first.get('merged_prs')}/失败CI{first.get('failed_ci')}")
+        detail = client.get(f"{API}/api/reports/{first['id']}").json()
+        check("周报正文可读且结构完整",
+              "## 概况" in detail.get("body", "") and "## 风险提示" in detail.get("body", ""),
+              f"正文 {len(detail.get('body', ''))} 字")
+        again = client.post(f"{API}/api/reports/generate?repo_id=1").json()
+        check("手动生成是幂等的(同周期同一份)", again["id"] == first["id"],
+              f"id={again['id']} vs {first['id']}")
 
     print()
     print(f"==== 验收汇总: PASS={passed} FAIL={failed} ====")

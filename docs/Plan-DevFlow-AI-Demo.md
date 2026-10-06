@@ -3442,3 +3442,67 @@ ragas 容器构建时直连 `files.pythonhosted.org` **读超时**(本机网络�
 - 未配置 `RAGAS_EVAL_URL` → `unavailable` 且说明原因
 - 评测器不可达 → **不抛异常**,如实报告(评测器挂了不能带崩整个 eval)
 - RAG 评测集每条都有 `ground_truth`(否则 context_recall 算不出来)
+---
+
+# 补充记录十:补文章所述功能(二)—— 自动周报(2026-10-06)
+
+文章「八大核心能力」的第 4 项是**自动周报**。此前只有一个 `weekly_report` 工具:
+能按需生成、能回写知识库,但**没有任何自动化** —— 用户不主动问,就没有周报。
+这正是八大能力里唯一「有工具、没链路」的一项。
+
+## 实现
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| 服务 | `app/reports/service.py` | **唯一**的统计与正文生成逻辑 + 幂等 |
+| 调度 | `app/reports/scheduler.py` | 进程内 asyncio 循环,启动即检查一次 |
+| 落库 | `models.WeeklyReport` | 周期键唯一约束做幂等 |
+| 接口 | `api/reports.py` | 列表 / 详情 / 手动生成 |
+| 前端 | `components/ReportsPanel.tsx` | 右栏「周报」标签页 |
+| 工具 | `tools/weekly_report.py` | 改为薄封装,调同一个 service |
+
+**幂等键用 ISO 周**(如 `2026-W41`):同一周无论调度器检查多少次,只会有一份。
+但也不能变成「永远只有一份」—— 跨周必须能出新周报,这一条有测试守着。
+
+## 两条刻意的设计决定
+
+**① 统计逻辑只能有一处。** 周报原先的实现散在工具里,如果调度器再抄一份,
+口径迟早漂移。这个项目**已经吃过一次亏**:CI 失败判定曾在 6 个地方各写了一遍
+`conclusion == "failure"`,漏掉了 `startup_failure`,导致系统报「没有失败 CI」。
+所以这次工具直接改成薄封装调 service,并加了一条测试盯着两者一致。
+
+**② 调度边界写进代码注释,而不是藏着。** 进程内循环不是生产级调度:
+多副本会各自触发、重启会重置计时。这些边界写在 `scheduler.py` 顶部,
+并且 `/api/reports` 会**如实暴露调度配置**(`enabled` / `check_seconds` / `days` / `current_period`)——
+前端也把它显示出来。理由是:周报是自动生成的,不告诉用户「什么时候生成、多久检查一次」,
+一份凭空出现的报告只会让人困惑。
+
+## 顺带修的可测性问题
+
+`scheduler.check_once()` 原先直接绑死 `SessionLocal`,单测用的是内存 SQLite,两者碰不到一起
+(测试里调它会去操作真实 Postgres)。改成**可注入 session 工厂**,调度逻辑本身才真正被覆盖到。
+
+## 实测
+
+```
+GET /api/reports
+总数: 1
+调度配置: {"enabled": true, "check_seconds": 3600, "days": 7, "current_period": "2026-W41"}
+#1 [auto] 2026-W41 docs/weekly-20261006.md
+   未处理 Issue 4 条、已合并 PR 1 条、失败 CI 1 次
+   generated_at=2026-10-06T09:23:11Z
+```
+
+服务启动后**自动**产出了这一份,`trigger=auto`,正文同时回写到了
+`data/snapshot/docs/weekly-20261006.md` 并登记为 Document。
+
+## 回归用例(11 条)
+
+周期键按 ISO 周、统计正确、同周期幂等、跨周期出新份、回写知识库、
+调度器只补缺的、工具与服务口径一致、API 列表/详情/手动生成幂等/404。
+
+## 遗留
+
+推送 GitHub 时被拒:`refusing to allow a Personal Access Token to create or update workflow
+.github/workflows/ci.yml without 'workflow' scope` —— 令牌还缺 **Workflows: Read and write**。
+代码已在本地提交(4 个),等权限到位即可推。
