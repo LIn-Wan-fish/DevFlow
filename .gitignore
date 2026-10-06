@@ -1,0 +1,27 @@
+# env / secrets
+.env
+backend/.env
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+uv.lock
+
+# node
+node_modules/
+.next/
+frontend/.next/
+npm-debug.log*
+
+# uv cache (sandbox 下必须落在工作区内)
+.uv-cache/
+
+# 抓取/临时产物
+_*.mjs
+_*.html
+_*.json.bak
+# 加速器根证书是机器相关的,不进仓库(保留 .gitkeep)
+backend/certs/extra-ca/*.pem

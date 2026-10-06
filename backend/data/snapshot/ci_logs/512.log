@@ -1,0 +1,42 @@
+2026-10-05T02:14:07.114Z  Run actions/checkout@v4
+2026-10-05T02:14:12.882Z  Run actions/setup-go@v5
+2026-10-05T02:14:31.006Z  Run go build ./...
+2026-10-05T02:14:58.221Z  build ok
+2026-10-05T02:15:02.339Z  Run go vet ./...
+2026-10-05T02:15:19.774Z  vet ok
+2026-10-05T02:15:21.005Z  Run pytest tests/ -x -q
+2026-10-05T02:15:23.119Z  ============================= test session starts ==============================
+2026-10-05T02:15:23.120Z  platform linux -- Python 3.12.7, pytest-8.3.4, pluggy-1.5.0
+2026-10-05T02:15:23.121Z  rootdir: /home/runner/work/clowder-ai/clowder-ai
+2026-10-05T02:15:23.122Z  collected 41 items
+2026-10-05T02:15:23.558Z  tests/test_api_routes.py ..........                                       [ 24%]
+2026-10-05T02:15:24.901Z  tests/test_login.py ....F                                                  [ 36%]
+2026-10-05T02:15:24.902Z  =================================== FAILURES ===================================
+2026-10-05T02:15:24.903Z  ______________________ test_login_success_with_valid_credentials ______________________
+2026-10-05T02:15:24.904Z
+2026-10-05T02:15:24.905Z      def test_login_success_with_valid_credentials():
+2026-10-05T02:15:24.906Z          resp = client.post("/api/auth/login", json={
+2026-10-05T02:15:24.907Z              "email": "user@example.com", "password": "correct-horse"
+2026-10-05T02:15:24.908Z          })
+2026-10-05T02:15:24.909Z  >       assert resp.status_code == 200
+2026-10-05T02:15:24.910Z  E       AssertionError: expected 200 got 401
+2026-10-05T02:15:24.911Z  E       assert 401 == 200
+2026-10-05T02:15:24.912Z  E        +  where 401 = <Response [401 Unauthorized]>.status_code
+2026-10-05T02:15:24.913Z
+2026-10-05T02:15:24.914Z  tests/test_login.py:47: AssertionError
+2026-10-05T02:15:24.915Z  ----------------------------- Captured stderr call -----------------------------
+2026-10-05T02:15:24.916Z  WARNING auth.session: token 已过期,拒绝复用旧 session
+2026-10-05T02:15:24.917Z  WARNING auth.login: 密码校验失败 code=401 path=src/auth/session.py:88
+2026-10-05T02:15:24.918Z  ______________________ test_refresh_token_after_expiry ______________________
+2026-10-05T02:15:24.919Z
+2026-10-05T02:15:24.920Z      def test_refresh_token_after_expiry():
+2026-10-05T02:15:24.921Z          token = issue_token(ttl_seconds=-1)
+2026-10-05T02:15:24.922Z  >       assert refresh(token)["ok"] is True
+2026-10-05T02:15:24.923Z  E       KeyError: 'ok'
+2026-10-05T02:15:24.924Z
+2026-10-05T02:15:24.925Z  tests/test_login.py:88: KeyError
+2026-10-05T02:15:24.926Z  =========================== short test summary info ===========================
+2026-10-05T02:15:24.927Z  FAILED tests/test_login.py::test_login_success_with_valid_credentials - AssertionError: expected 200 got 401
+2026-10-05T02:15:24.928Z  FAILED tests/test_login.py::test_refresh_token_after_expiry - KeyError: 'ok'
+2026-10-05T02:15:24.929Z  ========================= 2 failed, 39 passed in 1.82s =========================
+2026-10-05T02:15:25.006Z  Process completed with exit code 1.

@@ -1,0 +1,16 @@
+name: repo_health_report
+description: 拉取仓库健康数据,并生成一份可读摘要用于周会同步
+input_schema:
+  type: object
+  required: [repo_id]
+  properties:
+    repo_id:
+      type: integer
+      description: 仓库 ID
+steps:
+  - tool: repo_health
+    args:
+      repo_id: "{{ repo_id }}"
+  - tool: weekly_report
+    args:
+      repo_id: "{{ repo_id }}"

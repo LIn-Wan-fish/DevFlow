@@ -1,0 +1,200 @@
+﻿backend-1  | 2026-10-06 07:52:18,562 WARNING app.github.provider: 拉取 CI #30158064097 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:19,076 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158056297/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:19,076 WARNING app.github.provider: 拉取 CI #30158056297 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:19,587 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158009734/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:19,587 WARNING app.github.provider: 拉取 CI #30158009734 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:20,099 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158006397/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:20,100 WARNING app.github.provider: 拉取 CI #30158006397 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:20,612 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30157977048/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:20,612 WARNING app.github.provider: 拉取 CI #30157977048 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:21,635 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30157916753/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:21,635 WARNING app.github.provider: 拉取 CI #30157916753 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:22,147 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:52:22,149 INFO app.main: GitHub 数据同步完成:{'issues': 0, 'pulls': 0, 'ci_runs': 0, 'ci_logs': 0}
+backend-1  | 2026-10-06 07:52:23,579 INFO app.main: 知识库索引完成:{'documents': 0, 'chunks': 0}
+backend-1  | INFO:     Application startup complete.
+backend-1  | INFO:     127.0.0.1:33320 - "POST /api/chat/stream HTTP/1.1" 200 OK
+backend-1  | 2026-10-06 07:52:25,129 INFO httpx2: HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
+backend-1  | WARNING:  WatchFiles detected changes in '_loop1.py'. Reloading...
+backend-1  | INFO:     Shutting down
+backend-1  | INFO:     Waiting for application shutdown.
+backend-1  | INFO:     Application shutdown complete.
+backend-1  | INFO:     Finished server process [102]
+backend-1  | INFO:     Started server process [144]
+backend-1  | INFO:     Waiting for application startup.
+backend-1  | 2026-10-06 07:52:35,466 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.schemas
+backend-1  | 2026-10-06 07:52:35,466 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.tables
+backend-1  | 2026-10-06 07:52:35,466 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.types
+backend-1  | 2026-10-06 07:52:35,466 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.constraints
+backend-1  | 2026-10-06 07:52:35,466 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.defaults
+backend-1  | 2026-10-06 07:52:35,466 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.comments
+backend-1  | 2026-10-06 07:52:35,466 INFO alembic.runtime.plugins: setup plugin alembic.ext.checkconstraint_byname
+backend-1  | 2026-10-06 07:52:36,188 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/issues?state=open&per_page=100 "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:52:36,805 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/pulls?state=all&per_page=100 "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:52:37,415 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs?per_page=30 "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:52:37,930 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158064097/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:37,931 WARNING app.github.provider: 拉取 CI #30158064097 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:38,445 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158056297/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:38,446 WARNING app.github.provider: 拉取 CI #30158056297 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:38,957 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158009734/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:38,957 WARNING app.github.provider: 拉取 CI #30158009734 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:39,467 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158006397/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:39,468 WARNING app.github.provider: 拉取 CI #30158006397 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:39,976 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30157977048/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:39,976 WARNING app.github.provider: 拉取 CI #30157977048 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:40,482 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30157916753/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:40,482 WARNING app.github.provider: 拉取 CI #30157916753 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:40,991 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:52:40,994 INFO app.main: GitHub 数据同步完成:{'issues': 0, 'pulls': 0, 'ci_runs': 0, 'ci_logs': 0}
+backend-1  | WARNING:  WatchFiles detected changes in '_loop2.py'. Reloading...
+backend-1  | 2026-10-06 07:52:42,581 INFO app.main: 知识库索引完成:{'documents': 0, 'chunks': 0}
+backend-1  | INFO:     Application startup complete.
+backend-1  | INFO:     Shutting down
+backend-1  | INFO:     Waiting for application shutdown.
+backend-1  | INFO:     Application shutdown complete.
+backend-1  | INFO:     Finished server process [144]
+backend-1  | INFO:     Started server process [189]
+backend-1  | INFO:     Waiting for application startup.
+backend-1  | 2026-10-06 07:52:46,743 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.schemas
+backend-1  | 2026-10-06 07:52:46,743 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.tables
+backend-1  | 2026-10-06 07:52:46,744 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.types
+backend-1  | 2026-10-06 07:52:46,744 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.constraints
+backend-1  | 2026-10-06 07:52:46,744 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.defaults
+backend-1  | 2026-10-06 07:52:46,744 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.comments
+backend-1  | 2026-10-06 07:52:46,744 INFO alembic.runtime.plugins: setup plugin alembic.ext.checkconstraint_byname
+backend-1  | 2026-10-06 07:52:47,442 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/issues?state=open&per_page=100 "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:52:47,957 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/pulls?state=all&per_page=100 "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:52:48,468 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs?per_page=30 "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:52:48,978 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158064097/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:48,979 WARNING app.github.provider: 拉取 CI #30158064097 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:49,489 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158056297/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:49,489 WARNING app.github.provider: 拉取 CI #30158056297 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:50,002 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158009734/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:50,003 WARNING app.github.provider: 拉取 CI #30158009734 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:50,518 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158006397/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:50,519 WARNING app.github.provider: 拉取 CI #30158006397 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:51,030 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30157977048/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:51,031 WARNING app.github.provider: 拉取 CI #30157977048 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:51,541 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30157916753/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:52:51,542 WARNING app.github.provider: 拉取 CI #30157916753 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:52:52,057 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:52:52,059 INFO app.main: GitHub 数据同步完成:{'issues': 0, 'pulls': 0, 'ci_runs': 0, 'ci_logs': 0}
+backend-1  | 2026-10-06 07:52:53,576 INFO app.main: 知识库索引完成:{'documents': 0, 'chunks': 0}
+backend-1  | INFO:     Application startup complete.
+backend-1  | INFO:     127.0.0.1:33948 - "POST /api/drafts/1/confirm HTTP/1.1" 403 Forbidden
+backend-1  | 2026-10-06 07:52:54,294 INFO httpx: HTTP Request: POST https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/issues/1/comments "HTTP/1.1 403 Forbidden"
+backend-1  | INFO:     127.0.0.1:33948 - "POST /api/drafts/1/confirm HTTP/1.1" 500 Internal Server Error
+backend-1  | ERROR:    Exception in ASGI application
+backend-1  | Traceback (most recent call last):
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 422, in run_asgi
+backend-1  |     result = await app(  # type: ignore[func-returns-value]
+backend-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+backend-1  |     return await self.app(scope, receive, send)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/applications.py", line 1215, in __call__
+backend-1  |     await super().__call__(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/starlette/applications.py", line 96, in __call__
+backend-1  |     await self.middleware_stack(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+backend-1  |     raise exc
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+backend-1  |     await self.app(scope, receive, _send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+backend-1  |     await self.app(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+backend-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+backend-1  |     raise exc
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+backend-1  |     await app(scope, receive, sender)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+backend-1  |     await self.app(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/starlette/routing.py", line 676, in __call__
+backend-1  |     await self.middleware_stack(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 2786, in app
+backend-1  |     await route.handle(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 1817, in handle
+backend-1  |     await self.original_router.handle(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 2869, in handle
+backend-1  |     await included_router._handle_selected(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 1843, in _handle_selected
+backend-1  |     await original_route.handle(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 1308, in handle
+backend-1  |     await effective_context.app(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 165, in app
+backend-1  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+backend-1  |     raise exc
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+backend-1  |     await app(scope, receive, sender)
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 151, in app
+backend-1  |     response = await f(request)
+backend-1  |                ^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 727, in app
+backend-1  |     raw_response = await run_endpoint_function(
+backend-1  |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/routing.py", line 362, in run_endpoint_function
+backend-1  |     return await run_in_threadpool(
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+backend-1  |     return await anyio.to_thread.run_sync(func)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/anyio/to_thread.py", line 65, in run_sync
+backend-1  |     return await get_async_backend().run_sync_in_worker_thread(
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+backend-1  |     return await future
+backend-1  |            ^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+backend-1  |     result = context.run(func, *args)
+backend-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/site-packages/fastapi/telemetry/_api.py", line 240, in _run_sync_endpoint
+backend-1  |     return function(**arguments)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/app/app/api/drafts.py", line 41, in confirm
+backend-1  |     draft = draft_store.confirm(db, draft_id, role=role)
+backend-1  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/app/app/safety/drafts.py", line 110, in confirm
+backend-1  |     _execute(db, draft)
+backend-1  |   File "/app/app/safety/drafts.py", line 156, in _execute
+backend-1  |     execute_write_action(db, draft)
+backend-1  |   File "/app/app/github/provider.py", line 79, in execute_write_action
+backend-1  |     asyncio.run(run())
+backend-1  |   File "/usr/local/lib/python3.12/asyncio/runners.py", line 195, in run
+backend-1  |     return runner.run(main)
+backend-1  |            ^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+backend-1  |     return self._loop.run_until_complete(task)
+backend-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend-1  |   File "/usr/local/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+backend-1  |     return future.result()
+backend-1  |            ^^^^^^^^^^^^^^^
+backend-1  |   File "/app/app/github/provider.py", line 65, in run
+backend-1  |     await client.create_issue_comment(repo.owner, repo.name, number,
+backend-1  |   File "/app/app/github/client.py", line 246, in create_issue_comment
+backend-1  |     raise GitHubError(f"发表评论失败:{response.status_code} {response.text[:200]}")
+backend-1  | app.github.client.GitHubError: 发表评论失败:403 {"message":"Resource not accessible by personal access token","documentation_url":"https://docs.github.com/rest/issues/comments#create-an-issue-comment","status":"403"}
+backend-1  | WARNING:  WatchFiles detected changes in '_loop2.py'. Reloading...
+backend-1  | INFO:     Shutting down
+backend-1  | INFO:     Waiting for application shutdown.
+backend-1  | INFO:     Application shutdown complete.
+backend-1  | INFO:     Finished server process [189]
+backend-1  | INFO:     Started server process [231]
+backend-1  | INFO:     Waiting for application startup.
+backend-1  | 2026-10-06 07:52:59,069 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.schemas
+backend-1  | 2026-10-06 07:52:59,070 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.tables
+backend-1  | 2026-10-06 07:52:59,070 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.types
+backend-1  | 2026-10-06 07:52:59,070 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.constraints
+backend-1  | 2026-10-06 07:52:59,070 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.defaults
+backend-1  | 2026-10-06 07:52:59,070 INFO alembic.runtime.plugins: setup plugin alembic.autogenerate.comments
+backend-1  | 2026-10-06 07:52:59,070 INFO alembic.runtime.plugins: setup plugin alembic.ext.checkconstraint_byname
+backend-1  | 2026-10-06 07:52:59,840 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/issues?state=open&per_page=100 "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:53:00,318 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/pulls?state=all&per_page=100 "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:53:00,965 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs?per_page=30 "HTTP/1.1 200 OK"
+backend-1  | 2026-10-06 07:53:01,576 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158064097/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:53:01,577 WARNING app.github.provider: 拉取 CI #30158064097 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:53:02,087 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158056297/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:53:02,088 WARNING app.github.provider: 拉取 CI #30158056297 日志失败,该次排障将缺少证据:CI 日志不存在或已过期
+backend-1  | 2026-10-06 07:53:02,597 INFO httpx: HTTP Request: GET https://api.github.com/repos/LIn-Wan-fish/portfolio-demo/actions/runs/30158009734/logs "HTTP/1.1 404 Not Found"
+backend-1  | 2026-10-06 07:53:02,597 WARNING app.github.provider: 拉取 CI #30158009734 日志失败,该次排障将缺少证据:CI 日志不存在或已过期

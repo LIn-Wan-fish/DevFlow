@@ -1,0 +1,9 @@
+[
+  {
+    "owner": "acme",
+    "name": "clowder-ai",
+    "default_branch": "main",
+    "workspace_path": "code",
+    "is_github": false
+  }
+]

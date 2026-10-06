@@ -1,0 +1,52 @@
+[
+  {
+    "number": 24,
+    "title": "登录报错",
+    "state": "open",
+    "group": "unarchived",
+    "labels": ["bug", "priority:P0", "area:auth"],
+    "author": "zhangsan",
+    "assignee": null,
+    "body": "## 现象\n线上环境用正确的账号密码登录,页面提示「登录失败」,浏览器控制台看到 401。\n\n## 复现步骤\n1. 打开 /login\n2. 输入已注册的邮箱和密码\n3. 点击「登录」\n\n## 期望\n登录成功并跳转到 /dashboard。\n\n## 实际\n停在登录页,Network 里 POST /api/auth/login 返回 401。\n\n## 补充\n昨天还好好的,今天早上开始出现。看 commit 历史,和 #512 那次 CI 失败是同一批改动。"
+  },
+  {
+    "number": 23,
+    "title": "导出 CSV 时中文乱码",
+    "state": "open",
+    "group": "discussing",
+    "labels": ["bug", "priority:P2"],
+    "author": "lisi",
+    "assignee": "wangwu",
+    "body": "导出的 CSV 用 Excel 打开中文全是乱码。怀疑是没有写 BOM 头。"
+  },
+  {
+    "number": 3,
+    "title": "Feature: 增加桌面化能力",
+    "state": "open",
+    "group": "unarchived",
+    "labels": ["feature", "priority:P2", "area:ui"],
+    "author": "wangwu",
+    "assignee": null,
+    "body": "### What problem does this solve?\n目前只能在浏览器里用,希望能把常用视图做成桌面端,方便常驻使用。\n\n### Proposed solution\n用 Electron 包一层,复用现有的 Web 前端。\n\n### Alternatives considered\n做成 PWA。改动更小,但离线能力和系统托盘支持有限。"
+  },
+  {
+    "number": 2,
+    "title": "Feature: 测试",
+    "state": "open",
+    "group": "unarchived",
+    "labels": ["feature", "priority:P3"],
+    "author": "zhangsan",
+    "assignee": null,
+    "body": "### What problem does this solve?\n登录链路缺少自动化测试,这次 #24 就是回归漏掉的。\n\n### Proposed solution\n给 /api/auth/login 补一组集成测试,覆盖密码错误、token 过期、正常登录三条路径。"
+  },
+  {
+    "number": 1,
+    "title": "文档:补充部署说明",
+    "state": "closed",
+    "group": "closed",
+    "labels": ["docs"],
+    "author": "lisi",
+    "assignee": "lisi",
+    "body": "README 里缺少 Docker 部署章节。"
+  }
+]

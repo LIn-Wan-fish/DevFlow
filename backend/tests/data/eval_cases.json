@@ -1,0 +1,56 @@
+[
+  {
+    "key": "issue-24-priority",
+    "question": "分析 Issue #24 的优先级和复杂度",
+    "expect": {"tools": ["analyze_issue"], "field": {"path": "priority", "equals": "P0"}}
+  },
+  {
+    "key": "issue-3-assignee",
+    "question": "Issue #3: Feature: 增加桌面化能力 应该分给谁?",
+    "expect": {"tools": ["analyze_issue"],
+               "field": {"path": "recommended_assignee", "non_empty": true}}
+  },
+  {
+    "key": "pr-12-review",
+    "question": "PR #12 能不能合?",
+    "expect": {"tools": ["review_pr"], "stop_reason": "completed"}
+  },
+  {
+    "key": "ci-512-rootcause",
+    "question": "CI #512 为什么失败?",
+    "expect": {"tools": ["debug_ci"], "answer_contains": ["401"]}
+  },
+  {
+    "key": "release-check-workflow",
+    "question": "检查当前 Issue、PR 和失败 CI,判断这个版本是否可以发布",
+    "expect": {"tools": ["run_workflow"], "events": ["plan", "observation"]}
+  },
+  {
+    "key": "docs-refresh-token",
+    "question": "文档里 refresh_token 是怎么说的?",
+    "expect": {"tools": ["search_docs"], "citations_present": true}
+  },
+  {
+    "key": "code-login-impl",
+    "question": "登录校验的代码在哪个文件?",
+    "expect": {"tools": ["search_code"]}
+  },
+  {
+    "key": "draft-comment",
+    "question": "给 Issue #3 写一条查询评论草稿",
+    "expect": {"tools": ["draft_action"], "events": ["draft"], "no_write_executed": true}
+  },
+  {
+    "key": "weekly-report",
+    "question": "帮我生成这周的研发周报",
+    "expect": {"tools": ["weekly_report"]}
+  },
+  {
+    "key": "no-evidence-question",
+    "question": "项目里量子纠缠模块怎么实现?",
+    "expect": {
+      "answer_contains_any": ["未找到", "没有找到", "未检索到", "未发现", "没有相关", "不存在"],
+      "citations_present": false
+    }
+  }
+]

@@ -1,0 +1,22 @@
+# 可选叠加文件:本机启用了 GitHub 加速器(Steam++ / Watt Toolkit 等)时使用。
+#
+#   docker compose -f docker-compose.yml -f docker-compose.accelerator.yml up -d --build backend
+#
+# 为什么需要它:
+#   这类加速器会把 github 相关域名写进宿主机 hosts 指向 127.0.0.1,自己在宿主机上
+#   监听 443 并转发。但**容器里的 127.0.0.1 是容器自己**,于是连接被拒
+#   (httpx.ConnectError: All connection attempts failed)。
+#   把域名改指向宿主机网关,容器就能走到加速器。
+#
+# 配套还需要信任加速器的根证书(它做 TLS 中间人),做法见 scripts/enable-github-accelerator.ps1。
+#
+# ⚠️ 这会改变容器的域名解析,并且需要容器信任一个本地中间人根证书。
+#    只有在直连 GitHub 不通、又确实需要真实 GitHub 数据时才叠加本文件。
+services:
+  backend:
+    extra_hosts:
+      - "api.github.com:host-gateway"
+      - "github.com:host-gateway"
+      - "raw.githubusercontent.com:host-gateway"
+      - "objects.githubusercontent.com:host-gateway"
+      - "codeload.github.com:host-gateway"

@@ -1,0 +1,35 @@
+[
+  {
+    "number": 512,
+    "workflow": "CI",
+    "branch": "fix-login",
+    "status": "completed",
+    "conclusion": "failure",
+    "commit_sha": "a3f9c21",
+    "commit_message": "fix(auth): 修正密码校验分支 + token 过期清理",
+    "log_file": "ci_logs/512.log",
+    "duration_seconds": 143
+  },
+  {
+    "number": 511,
+    "workflow": "CI",
+    "branch": "main",
+    "status": "completed",
+    "conclusion": "success",
+    "commit_sha": "77b1e04",
+    "commit_message": "refactor(session): 抽出 session 存储接口",
+    "log_file": "ci_logs/511.log",
+    "duration_seconds": 138
+  },
+  {
+    "number": 510,
+    "workflow": "Lint",
+    "branch": "main",
+    "status": "completed",
+    "conclusion": "success",
+    "commit_sha": "77b1e04",
+    "commit_message": "refactor(session): 抽出 session 存储接口",
+    "log_file": "ci_logs/510.log",
+    "duration_seconds": 41
+  }
+]
