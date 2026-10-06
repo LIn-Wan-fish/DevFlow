@@ -83,6 +83,13 @@ export const api = {
   runEval: (mode?: string) => post<EvalResult>("/api/eval/run", mode ? { mode } : {}),
   evalRuns: () => get<Record<string, any>[]>("/api/eval/runs"),
   mcpTools: () => get<{ tools: { name: string }[] }>("/api/mcp/tools"),
+  addRepo: (fullName: string) =>
+    post<{
+      id: number; owner: string; name: string; full_name: string;
+      default_branch: string; is_github: boolean;
+    }>("/api/repos", { full_name: fullName }),
+  syncRepo: (repoId: number) =>
+    post<{ repo: string; counts: Record<string, number> }>(`/api/repos/${repoId}/sync`),
   reports: (repoId: number) =>
     get<{
       total: number;

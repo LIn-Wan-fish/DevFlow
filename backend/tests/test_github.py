@@ -278,7 +278,7 @@ async def test_sync_repo_落库_过滤_pr_标记高风险_并拉取失败_ci_日
     db.commit()
 
     client = _client(_sync_handler)
-    monkeypatch.setattr("app.github.provider.require_client", lambda: client)
+    monkeypatch.setattr("app.github.provider.require_client", lambda **_kwargs: client)
     monkeypatch.setattr("app.github.provider.SNAPSHOT_DIR", tmp_path)
 
     counts = await sync_repo(db, repo.id)
@@ -315,7 +315,7 @@ async def test_sync_repo_日志拉取失败不阻断同步(db, monkeypatch, tmp_
     db.commit()
 
     client = _client(handler)
-    monkeypatch.setattr("app.github.provider.require_client", lambda: client)
+    monkeypatch.setattr("app.github.provider.require_client", lambda **_kwargs: client)
     monkeypatch.setattr("app.github.provider.SNAPSHOT_DIR", tmp_path)
 
     counts = await sync_repo(db, repo.id)
@@ -329,7 +329,7 @@ async def test_sync_repo_幂等(db, monkeypatch, tmp_path):
     db.add(repo)
     db.commit()
     monkeypatch.setattr("app.github.provider.require_client",
-                        lambda: _client(_sync_handler))
+                        lambda **_kwargs: _client(_sync_handler))
     monkeypatch.setattr("app.github.provider.SNAPSHOT_DIR", tmp_path)
 
     first = await sync_repo(db, repo.id)

@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db import models as m
 from app.github.conclusions import healthy_filter
 from app.db.session import get_db
+from app.repos import service as repo_service
 from app.schemas.workspace import HealthOut, RepoOut, SessionOut
 
 router = APIRouter(prefix="/api/repos", tags=["仓库"])
@@ -58,3 +60,38 @@ def list_sessions(repo_id: int = Path(..., description="仓库 ID"), db: Session
     rows = db.scalars(select(m.Session).where(m.Session.repo_id == repo_id)
                       .order_by(m.Session.id)).all()
     return [SessionOut(id=s.id, title=s.title, repo_id=s.repo_id) for s in rows]
+
+# --------------------------------------------------------------------------- 添加与同步
+
+
+class AddRepoRequest(BaseModel):
+    full_name: str
+    sync: bool = True
+
+
+@router.post("", response_model=RepoOut, status_code=201, summary="添加仓库(按 owner/name,幂等)")
+async def add_repo(body: AddRepoRequest, db: Session = Depends(get_db)) -> RepoOut:
+    """添加一个 GitHub 仓库并同步数据。
+
+    与内置快照仓库是**并列的项目**,互不影响 —— 每个仓库的数据来源写在 `is_github` 上,
+    不会出现「同一个仓库一半快照一半真实」的混用。
+    """
+    try:
+        repo, counts = await repo_service.add_repo(db, body.full_name, sync=body.sync)
+    except repo_service.RepoAddError as exc:
+        # 把真实原因原样回给用户:是没配令牌、仓库不存在,还是权限不够,三者区别很大
+        raise HTTPException(status_code=exc.status, detail=exc.detail) from exc
+    return RepoOut(id=repo.id, owner=repo.owner, name=repo.name,
+                   full_name=repo.full_name, default_branch=repo.default_branch,
+                   is_github=repo.is_github)
+
+
+@router.post("/{repo_id}/sync", summary="重新同步仓库数据(快照仓库会如实拒绝)")
+async def sync_repo(repo_id: int = Path(..., description="仓库 ID"),
+                    db: Session = Depends(get_db)) -> dict:
+    repo = _require_repo(db, repo_id)
+    try:
+        counts = await repo_service.resync(db, repo)
+    except repo_service.RepoAddError as exc:
+        raise HTTPException(status_code=exc.status, detail=exc.detail) from exc
+    return {"repo": repo.full_name, "counts": counts}

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ChatPanel from "@/components/ChatPanel";
 import OverviewBar from "@/components/OverviewBar";
 import ProjectSidebar, { type SessionNode } from "@/components/ProjectSidebar";
+import AddProjectDialog from "@/components/AddProjectDialog";
 import WorkspacePanel from "@/components/WorkspacePanel";
 import { api } from "@/lib/api";
 import type { CiItem, Health, IssueGroupCounts, IssueItem, MemoryCandidate,
@@ -13,6 +14,7 @@ import type { CiItem, Health, IssueGroupCounts, IssueItem, MemoryCandidate,
 export default function WorkspacePage() {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [repoId, setRepoId] = useState(1);
+  const [adding, setAdding] = useState(false);
   const [health, setHealth] = useState<Health | null>(null);
   const [issues, setIssues] = useState<IssueItem[]>([]);
   const [groups, setGroups] = useState<IssueGroupCounts>({});
@@ -86,8 +88,15 @@ export default function WorkspacePage() {
         onSelectRepo={setRepoId}
         onSelectSession={setSession}
         onRefresh={() => void reload()}
-        onAddProject={() => window.alert("Demo 只内置 acme/clowder-ai 一个仓库快照")}
+        onAddProject={() => setAdding(true)}
       />
+
+      {adding ? (
+        <AddProjectDialog
+          onClose={() => setAdding(false)}
+          onAdded={() => void reload()}
+        />
+      ) : null}
 
       <main className="flex h-full min-w-0 flex-1 flex-col">
         {repos.length === 0 ? (

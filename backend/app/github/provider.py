@@ -26,8 +26,17 @@ logger = logging.getLogger(__name__)
 LOG_FETCH_SKIP = HEALTHY_CONCLUSIONS
 
 
-def require_client() -> GitHubClient:
-    if settings.data_source != "github":
+def require_client(*, explicit: bool = False) -> GitHubClient:
+    """拿到 GitHub 客户端。
+
+    `explicit=True` 用于**用户明确要求的**操作(例如「添加这个仓库」):
+    那种场景下只需要有令牌即可,不需要把 `DATA_SOURCE` 切成 github ——
+    用户点的是「添加某个仓库」,不是在要求「整个应用改用真实数据源」。
+
+    默认(`explicit=False`)仍然要求 `DATA_SOURCE=github`:启动时的自动装载
+    不该在快照模式下偷偷去打网络。
+    """
+    if not explicit and settings.data_source != "github":
         raise RuntimeError("当前 DATA_SOURCE 不是 github")
     return GitHubClient(settings.github_token, settings.github_api_base)
 
@@ -80,7 +89,7 @@ def execute_write_action(db: Session, draft: m.ActionDraft) -> None:
 
 
 async def sync_repo(db: Session, repo_id: int, *, limit: int = 100,
-                    fetch_logs: bool = True) -> dict[str, int]:
+                    fetch_logs: bool = True, explicit: bool = False) -> dict[str, int]:
     """把 GitHub 上的 Issue / PR / CI 同步进本地库。
 
     本地库始终是「当前视图」,Agent 读本地库即可 ——
@@ -90,7 +99,7 @@ async def sync_repo(db: Session, repo_id: int, *, limit: int = 100,
     if repo is None:
         raise LookupError("仓库不存在")
 
-    client = require_client()
+    client = require_client(explicit=explicit)
     counts = {"issues": 0, "pulls": 0, "ci_runs": 0, "ci_logs": 0}
     try:
         for raw in await client.list_issues(repo.owner, repo.name):

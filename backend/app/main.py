@@ -144,23 +144,19 @@ async def _ensure_data() -> None:
         )
         return
 
-    owner, _, name = settings.github_repo.partition("/")
-    owner, name = owner.strip(), name.strip()
+    # 复用「添加仓库」的服务,不在这里再写一份同步逻辑
+    from app.repos import service as repo_service
+
     with SessionLocal() as db:
-        repo = db.scalar(select(m.Repo).where(m.Repo.owner == owner, m.Repo.name == name))
-        if repo is None:
-            repo = m.Repo(owner=owner, name=name, is_github=True)
-            db.add(repo)
-            db.commit()
         try:
-            counts = await sync_repo(db, repo.id)
-        except GitHubNotConfigured as exc:
-            logger.error("GitHub 同步失败:%s", exc)
+            repo, counts = await repo_service.add_repo(db, settings.github_repo)
+        except repo_service.RepoAddError as exc:
+            logger.error("GitHub 数据装载失败;界面将显示空数据:%s", exc.detail)
             return
         except Exception:  # noqa: BLE001
-            logger.exception("GitHub 同步失败;界面将显示空数据")
+            logger.exception("GitHub 数据装载失败;界面将显示空数据")
             return
-    logger.info("GitHub 数据同步完成:%s", counts)
+    logger.info("GitHub 数据已就绪:%s(%s)", repo.full_name, counts)
 
 
 @asynccontextmanager

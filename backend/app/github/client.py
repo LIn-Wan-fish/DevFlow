@@ -131,9 +131,19 @@ class GitHubClient:
 
             # 翻页时 url 已经是完整地址,不能再带 params
             is_absolute = url.startswith("http")
-            response = await self._client.get(
-                url, params=None if is_absolute else params, headers=headers
-            )
+            try:
+                response = await self._client.get(
+                    url, params=None if is_absolute else params, headers=headers
+                )
+            except httpx.TransportError as exc:
+                # 网络层错误(连不上 / 超时 / TLS 失败)必须在这里转成 GitHubError,
+                # 否则会原样漏成 500。而「连不上 GitHub」和「仓库不存在」是完全不同
+                # 的两件事,用户需要知道卡在哪一层(实测栽过:容器连不上 api.github.com)。
+                last_error = GitHubError(f"连接 GitHub 失败:{exc}")
+                if attempt < self._max_retries:
+                    await asyncio.sleep(min(2**attempt, self._max_backoff))
+                    continue
+                raise last_error from exc
 
             if response.status_code == 304:
                 # 内容没变:返回缓存体,而不是空结果
