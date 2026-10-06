@@ -13,6 +13,9 @@ import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 # 必须显式配置日志。uvicorn 只给自己的 logger 装 handler,
 # root 是空的 —— 应用自己的 logger 会**静默丢弃**。
@@ -27,6 +30,7 @@ logging.basicConfig(
 from app.api import (auth, chat, ci, drafts, issues, mcp as mcp_api, memory, prs, rag,
                      reports, repos, runs, skills)
 from app.api import eval as eval_api
+from app.api.docs import REDOC_HTML, STATIC_DIR, SWAGGER_HTML
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -197,7 +201,36 @@ async def lifespan(app: FastAPI):  # noqa: ANN001, ARG001
                 await asyncio.wait_for(task, timeout=10)
 
 
-app = FastAPI(title="DevFlow AI", version="0.1.0", lifespan=lifespan)
+# docs_url/redoc_url 置 None:FastAPI 默认的文档页从 cdn.jsdelivr.net 拉 JS/CSS,
+# 国内网络下经常连不上 —— 页面白屏,但服务端一切正常,很难查。
+# 改成后端自己托管静态资源(见 app/api/docs.py)。
+app = FastAPI(title="DevFlow AI", version="0.1.0", lifespan=lifespan,
+              docs_url=None, redoc_url=None, openapi_url="/openapi.json")
+
+# Swagger UI / ReDoc 的静态资源,随仓库一起分发,不依赖任何外网 CDN
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+# 前端与后端不同源,必须显式允许 —— 否则浏览器会拦掉所有响应,
+# 页面上只会看到"没有数据"。此前一直没配,服务端 httpx 测试发现不了(CORS 是浏览器行为)。
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/docs", include_in_schema=False)
+def api_docs() -> HTMLResponse:
+    """离线可用的 Swagger UI。"""
+    return HTMLResponse(SWAGGER_HTML)
+
+
+@app.get("/redoc", include_in_schema=False)
+def api_redoc() -> HTMLResponse:
+    """离线可用的 ReDoc。"""
+    return HTMLResponse(REDOC_HTML)
+
 
 for router in (chat.router, repos.router, issues.router, prs.router, ci.router,
                rag.router, drafts.router, memory.router, runs.router, eval_api.router,

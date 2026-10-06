@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     max_replan: int = 2
     workflow_parallelism: int = 4
 
+    # ---- 跨域 ----
+    # 前端(http://localhost:3000)与后端(8000)是**不同源**的,
+    # 浏览器会拦下所有没有 CORS 头的响应 —— 页面会表现成"打不开/没数据"。
+    # 注意:这里必须列具体来源,不能用 "*":一旦 allow_credentials=True,
+    # 浏览器会直接拒绝通配符来源。
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+
     # ---- MCP 外部工具接入 ----
     # inprocess:进程内示例工具(默认,离线可跑) | stdio:真实 MCP server 子进程 + JSON-RPC
     mcp_transport: str = "inprocess"
@@ -52,6 +59,10 @@ class Settings(BaseSettings):
     weekly_report_check_seconds: int = 3600
     # 周报统计窗口天数
     weekly_report_days: int = 7
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [o.strip() for o in (self.cors_origins or "").split(",") if o.strip()]
 
     @property
     def mcp_server_args_list(self) -> list[str]:

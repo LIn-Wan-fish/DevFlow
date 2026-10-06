@@ -3720,3 +3720,58 @@ INFO app.skills.bridge: 已接入 4 个技能:
 | 全链路验收 | **PASS=55 FAIL=0** |
 | Eval | **10/10** |
 | 门槛行为 | 9/9 符合预期(正常全可引用,离题全不可引用) |
+---
+
+# 补充记录十四:页面打不开的两个真问题(2026-10-06)
+
+用户反馈四个入口「不能正常使用,提示只有快照」。查下来是**两个独立的真 bug**,
+而且都属于**服务端测试天然发现不了**的类型。
+
+## 问题一:后端根本没配 CORS
+
+前端在 `localhost:3000`,后端在 `localhost:8000` —— **不同源**。
+浏览器会拦掉所有没有 CORS 头的响应,表现就是页面拿不到任何数据,
+于是显示那条橙色提示(文案里恰好提到"快照",用户看到的就是这个)。
+
+实测:
+
+```
+OPTIONS /api/repos  (Origin: http://localhost:3000)  →  405 Method Not Allowed
+GET     /api/repos  (Origin: http://localhost:3000)  →  200 但无任何 access-control-* 头
+```
+
+**为什么一直没被发现**:验收脚本用 httpx 直连后端,**不带 `Origin`** ——
+CORS 是浏览器强制的行为,服务端怎么测都是绿的。前端单测又是 mock 掉 API 的,
+同样碰不到。这是**测试方式的盲区**,不是测试不够多。
+
+修法:加 `CORSMiddleware`,来源从 `CORS_ORIGINS` 读,默认
+`http://localhost:3000,http://127.0.0.1:3000`。
+**刻意不用 `*`**:一旦 `allow_credentials=True`,浏览器会直接拒绝通配符来源。
+
+## 问题二:`/docs` 依赖 jsdelivr CDN
+
+FastAPI 默认的文档页从 `cdn.jsdelivr.net` 拉 Swagger 的 JS/CSS。国内网络下
+这个 CDN 经常连不上,页面白屏 —— 而服务端 `/docs` 返回 200,极难往这上面想。
+
+修法:把 Swagger / ReDoc 的静态资源**放进仓库**(`backend/app/static/swagger/`),
+由后端托管,零外部依赖。
+
+**踩到的坑**:`swagger-ui-bundle.js` 里**并不含** `SwaggerUIStandalonePreset`
+(它在单独的 `swagger-ui-standalone-preset.js` 里),而 FastAPI 默认 HTML 会引用它 ——
+所以只改 `swagger_js_url` 是**直接白屏**。最后自己写了 `/docs` 的 HTML,
+显式加载两个脚本再初始化。
+
+## 回归测试(8 条,`tests/test_web.py`)
+
+跨域预检 200 且带 allow-origin、实际响应也带、写接口(SSE)的预检、
+未知来源不被放行、文档页不含任何外部 CDN(**逐个检查 `<script src>` 都是本地路径**)、
+standalone preset 确实被加载、静态资源可访问、ReDoc 同样不依赖 CDN。
+
+## 验证
+
+| 项 | 结果 |
+|---|---|
+| 后端单测 | **270 passed**(+8) |
+| 三个页面的全部 API 调用(带 Origin) | 14/14 通过(含 2 个写接口预检) |
+| 文档静态资源 | 4/4 返回 200 |
+| `/docs` 外部引用 | **0 个** |
