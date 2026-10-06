@@ -23,8 +23,8 @@ export function EvalReport({ result }: { result: EvalResult }) {
               <span
                 className={`rounded px-1.5 py-0.5 text-[10px] ${
                   item.passed
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-red-100 text-red-700"
+                    ? "bg-ok-soft text-ok"
+                    : "bg-danger-soft text-danger"
                 }`}
               >
                 {item.passed ? "PASS" : "FAIL"}

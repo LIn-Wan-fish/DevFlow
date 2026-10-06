@@ -83,7 +83,7 @@ function TraceRow({
   if (kind === "task_started") {
     return (
       <li className="text-[11px]">
-        <span className="mr-1 rounded bg-amber-100 px-1 text-amber-700">执行中</span>
+        <span className="mr-1 rounded bg-warn-soft px-1 text-warn">执行中</span>
         {data.title ?? data.task_key}({data.agent})
       </li>
     );
@@ -93,15 +93,15 @@ function TraceRow({
     const status = String(data.status ?? "");
     const color =
       status === "succeeded"
-        ? "bg-emerald-100 text-emerald-700"
+        ? "bg-ok-soft text-ok"
         : status === "skipped"
           ? "bg-gray-200 text-gray-600"
-          : "bg-red-100 text-red-700";
+          : "bg-danger-soft text-danger";
     return (
       <li className="text-[11px]">
         <span className={`mr-1 rounded px-1 ${color}`}>{status}</span>
         {data.task_key}
-        {data.error ? <span className="ml-1 text-red-500">{data.error}</span> : null}
+        {data.error ? <span className="ml-1 text-danger">{data.error}</span> : null}
       </li>
     );
   }
@@ -109,7 +109,7 @@ function TraceRow({
   if (kind === "tool_call") {
     return (
       <li className="text-[11px]">
-        <span className="mr-1 rounded bg-blue-100 px-1 text-blue-700">调用</span>
+        <span className="mr-1 rounded bg-info-soft px-1 text-info">调用</span>
         <code>{data.tool}</code>
         {data.args && Object.keys(data.args).length ? (
           <span className="ml-1 text-muted">{JSON.stringify(data.args)}</span>
@@ -121,15 +121,15 @@ function TraceRow({
   if (kind === "tool_result") {
     if (data.error) {
       return (
-        <li className="text-[11px] text-red-500">
-          <span className="mr-1 rounded bg-red-100 px-1">失败</span>
+        <li className="text-[11px] text-danger">
+          <span className="mr-1 rounded bg-danger-soft px-1">失败</span>
           <code>{data.tool}</code> — {data.error}
         </li>
       );
     }
     return (
       <li className="text-[11px]">
-        <span className="mr-1 rounded bg-emerald-100 px-1 text-emerald-700">结果</span>
+        <span className="mr-1 rounded bg-ok-soft px-1 text-ok">结果</span>
         <code>{data.tool}</code>
         <span className="ml-1 text-muted">{data.summary}</span>
       </li>
@@ -143,7 +143,7 @@ function TraceRow({
       <li className="text-[11px]">
         <span className="mr-1 rounded bg-purple-100 px-1 text-purple-700">证据审查</span>
         {conflicts.length ? (
-          <ul className="ml-4 mt-0.5 list-disc space-y-0.5 text-red-600">
+          <ul className="ml-4 mt-0.5 list-disc space-y-0.5 text-danger">
             {conflicts.map((item, index) => (
               <li key={index}>{item}</li>
             ))}
@@ -152,7 +152,7 @@ function TraceRow({
           <span className="text-muted">未发现结论冲突</span>
         )}
         {gaps.length ? (
-          <ul className="ml-4 mt-0.5 list-disc space-y-0.5 text-amber-700">
+          <ul className="ml-4 mt-0.5 list-disc space-y-0.5 text-warn">
             {gaps.map((item, index) => (
               <li key={index}>{item}</li>
             ))}
@@ -209,8 +209,8 @@ function TraceRow({
 
   if (kind === "error") {
     return (
-      <li className="text-[11px] text-red-600">
-        <span className="mr-1 rounded bg-red-100 px-1">错误</span>
+      <li className="text-[11px] text-danger">
+        <span className="mr-1 rounded bg-danger-soft px-1">错误</span>
         {data.message}
       </li>
     );

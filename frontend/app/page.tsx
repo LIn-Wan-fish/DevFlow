@@ -6,6 +6,9 @@ import ChatPanel from "@/components/ChatPanel";
 import OverviewBar from "@/components/OverviewBar";
 import ProjectSidebar, { type SessionNode } from "@/components/ProjectSidebar";
 import AddProjectDialog from "@/components/AddProjectDialog";
+import ResizeHandle from "@/components/ResizeHandle";
+import ThemeToggle from "@/components/ThemeToggle";
+import { usePanelWidth } from "@/lib/usePanelWidth";
 import WorkspacePanel from "@/components/WorkspacePanel";
 import { api } from "@/lib/api";
 import type { CiItem, Health, IssueGroupCounts, IssueItem, MemoryCandidate,
@@ -15,6 +18,13 @@ export default function WorkspacePage() {
   const [repos, setRepos] = useState<Repo[]>([]);
   const [repoId, setRepoId] = useState(1);
   const [adding, setAdding] = useState(false);
+
+  // 左右面板宽度。各自的夹取范围不同:左侧是项目列表,太窄会看不清仓库名;
+  // 右侧是工作区(分组统计 + 列表),内容更宽。
+  const left = usePanelWidth({ storageKey: "devflow-w-left", initial: 248,
+                               min: 180, max: 420, side: "left" });
+  const right = usePanelWidth({ storageKey: "devflow-w-right", initial: 372,
+                                min: 280, max: 640, side: "right" });
   const [health, setHealth] = useState<Health | null>(null);
   const [issues, setIssues] = useState<IssueItem[]>([]);
   const [groups, setGroups] = useState<IssueGroupCounts>({});
@@ -89,7 +99,11 @@ export default function WorkspacePage() {
         onSelectSession={setSession}
         onRefresh={() => void reload()}
         onAddProject={() => setAdding(true)}
+        width={left.width}
+        footer={<ThemeToggle />}
       />
+
+      <ResizeHandle handlers={left.handlers} resizing={left.resizing} label="调整项目栏宽度" />
 
       {adding ? (
         <AddProjectDialog
@@ -100,7 +114,7 @@ export default function WorkspacePage() {
 
       <main className="flex h-full min-w-0 flex-1 flex-col">
         {repos.length === 0 ? (
-          <div className="border-b border-line bg-amber-50 px-4 py-3 text-[12px] text-amber-800">
+          <div className="border-b border-line bg-warn-soft px-4 py-3 text-[12px] text-warn">
             当前没有任何仓库数据。
             {error ? ` (${error})` : ""}
             若 <code>DATA_SOURCE=github</code>,请配置 <code>GITHUB_TOKEN</code> 与{" "}
@@ -130,7 +144,7 @@ export default function WorkspacePage() {
             <option value="viewer">viewer</option>
             <option value="maintainer">maintainer</option>
           </select>
-          <span className={authMode && !authMode.enforced ? "text-amber-700" : "text-muted"}>
+          <span className={authMode && !authMode.enforced ? "text-warn" : "text-muted"}>
             {authMode && !authMode.enforced
               ? "⚠ 演示模式:未配置角色令牌,角色由前端选择,不构成认证(配置 DEVFLOW_ROLE_TOKENS 后启用令牌认证)"
               : "已启用角色令牌认证(viewer 无写权限)"}
@@ -147,7 +161,9 @@ export default function WorkspacePage() {
         />
       </main>
 
+      <ResizeHandle handlers={right.handlers} resizing={right.resizing} label="调整工作区宽度" />
       <WorkspacePanel
+        width={right.width}
         repoId={repoId}
         issues={issues}
         groups={groups}

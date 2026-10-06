@@ -37,7 +37,7 @@ const COMPONENTS: Components = {
   li: ({ children }) => <li className="leading-relaxed [&>p]:my-0">{children}</li>,
   a: ({ children, href }) => (
     <a href={href} target="_blank" rel="noreferrer"
-       className="text-blue-600 underline underline-offset-2 hover:text-blue-700">
+       className="text-info underline underline-offset-2 hover:text-info">
       {children}
     </a>
   ),

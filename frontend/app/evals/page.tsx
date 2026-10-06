@@ -65,7 +65,7 @@ export default function EvalsPage() {
         </span>
       </div>
 
-      {error ? <p className="mb-3 text-[12px] text-red-600">{error}</p> : null}
+      {error ? <p className="mb-3 text-[12px] text-danger">{error}</p> : null}
       {result ? <EvalReport result={result} /> : null}
 
       {history.length ? (

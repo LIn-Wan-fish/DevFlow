@@ -13,6 +13,10 @@ type Props = {
   onSelectSession: (title: string) => void;
   onRefresh: () => void;
   onAddProject: () => void;
+  /** 由拖拽决定;不传则用默认宽度 */
+  width?: number;
+  /** 底部的额外内容(主题切换等) */
+  footer?: React.ReactNode;
 };
 
 /** 左栏:项目/会话树(对应 img_01 左侧)。 */
@@ -25,9 +29,11 @@ export function ProjectSidebar({
   onSelectSession,
   onRefresh,
   onAddProject,
+  width = 248,
+  footer,
 }: Props) {
   return (
-    <aside className="flex h-full w-[248px] shrink-0 flex-col border-r border-line bg-panel">
+    <aside style={{ width }} className="flex h-full shrink-0 flex-col border-r border-line bg-panel">
       <div className="flex items-center gap-2 px-3 py-3">
         <div className="flex h-8 w-8 items-center justify-center rounded bg-ink text-[11px] font-bold text-white">
           DF
@@ -93,14 +99,15 @@ export function ProjectSidebar({
         ))}
       </nav>
 
-      <div className="border-t border-line p-2">
+      <div className="flex items-center gap-2 border-t border-line p-2">
         <button
           type="button"
           onClick={onRefresh}
-          className="w-full rounded border border-line px-2 py-1.5 text-[12px] hover:border-accent hover:text-accent"
+          className="flex-1 rounded border border-line px-2 py-1.5 text-[12px] hover:border-accent hover:text-accent"
         >
           刷新当前项目
         </button>
+        {footer}
       </div>
     </aside>
   );

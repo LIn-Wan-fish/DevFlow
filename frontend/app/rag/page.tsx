@@ -53,7 +53,7 @@ export default function RagPage() {
         </button>
       </div>
 
-      {error ? <p className="mb-3 text-[12px] text-red-600">{error}</p> : null}
+      {error ? <p className="mb-3 text-[12px] text-danger">{error}</p> : null}
       {trace ? <RecallStages trace={trace} /> : null}
     </main>
   );

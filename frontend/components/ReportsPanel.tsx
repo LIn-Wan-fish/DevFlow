@@ -83,7 +83,7 @@ export default function ReportsPanel({ repoId }: { repoId: number }) {
       </div>
 
       {error ? (
-        <div className="rounded bg-red-50 px-2 py-1 text-[11px] text-red-600">{error}</div>
+        <div className="rounded bg-danger-soft px-2 py-1 text-[11px] text-danger">{error}</div>
       ) : null}
 
       {items.map((item) => (

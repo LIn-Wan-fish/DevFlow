@@ -15,6 +15,8 @@ type Tab = (typeof TABS)[number];
 
 type Props = {
   repoId: number;
+  /** 由拖拽决定;不传则用默认宽度 */
+  width?: number;
   issues: IssueItem[];
   groups: IssueGroupCounts;
   prs: PrItem[];
@@ -35,6 +37,7 @@ const TEAM = [
 /** 右栏 Workspace(对应 img_01 右侧五个标签页)。 */
 export function WorkspacePanel({
   repoId,
+  width = 372,
   issues,
   groups,
   prs,
@@ -58,7 +61,7 @@ export function WorkspacePanel({
   });
 
   return (
-    <aside className="flex h-full w-[372px] shrink-0 flex-col border-l border-line bg-canvas">
+    <aside style={{ width }} className="flex h-full shrink-0 flex-col border-l border-line bg-canvas">
       <div className="flex items-center gap-1 border-b border-line bg-panel px-2 py-1.5">
         <span className="mr-auto text-[12px] font-semibold">Workspace</span>
         {TABS.map((item) => (

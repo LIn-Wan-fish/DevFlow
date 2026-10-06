@@ -50,7 +50,7 @@ export function OverviewBar({ health, repo, session, onRefresh }: Props) {
               <div className="text-[11px] text-muted">{card.label}</div>
               <div
                 className={`text-[18px] font-semibold leading-tight ${
-                  highlight ? "text-red-500" : "text-ink"
+                  highlight ? "text-danger" : "text-ink"
                 }`}
               >
                 {value}

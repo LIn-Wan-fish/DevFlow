@@ -16,8 +16,8 @@ export function PrList({ items, onQuote }: { items: PrItem[]; onQuote?: (n: numb
               <span
                 className={`shrink-0 rounded px-1 text-[10px] ${
                   pr.merged
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-amber-100 text-amber-700"
+                    ? "bg-ok-soft text-ok"
+                    : "bg-warn-soft text-warn"
                 }`}
               >
                 {pr.merged ? "已合并" : pr.state}
@@ -29,7 +29,7 @@ export function PrList({ items, onQuote }: { items: PrItem[]; onQuote?: (n: numb
             {risky.length ? (
               <ul className="mt-1 space-y-0.5">
                 {risky.map((file) => (
-                  <li key={file.path} className="text-[10px] text-red-600">
+                  <li key={file.path} className="text-[10px] text-danger">
                     ⚠ 高风险 {file.path}
                   </li>
                 ))}

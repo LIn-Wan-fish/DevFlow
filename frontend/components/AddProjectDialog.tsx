@@ -75,10 +75,10 @@ export default function AddProjectDialog({
           </p>
         ) : null}
         {error ? (
-          <p className="mt-2 rounded bg-red-50 px-2 py-1.5 text-[11px] text-red-600">{error}</p>
+          <p className="mt-2 rounded bg-danger-soft px-2 py-1.5 text-[11px] text-danger">{error}</p>
         ) : null}
         {done ? (
-          <p className="mt-2 rounded bg-emerald-50 px-2 py-1.5 text-[11px] text-emerald-700">{done}</p>
+          <p className="mt-2 rounded bg-ok-soft px-2 py-1.5 text-[11px] text-ok">{done}</p>
         ) : null}
 
         <div className="mt-4 flex justify-end gap-2">

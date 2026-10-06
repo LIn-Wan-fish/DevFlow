@@ -14,8 +14,8 @@ export function CiList({ items, onQuote }: { items: CiItem[]; onQuote?: (n: numb
             <span
               className={`rounded px-1 text-[10px] ${
                 run.conclusion === "failure"
-                  ? "bg-red-100 text-red-700"
-                  : "bg-emerald-100 text-emerald-700"
+                  ? "bg-danger-soft text-danger"
+                  : "bg-ok-soft text-ok"
               }`}
             >
               {run.conclusion}

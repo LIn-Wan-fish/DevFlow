@@ -224,13 +224,13 @@ export function ChatPanel({
                 ))}
 
                 {message.error ? (
-                  <div className="mt-2 rounded bg-red-50 px-2 py-1 text-[11px] text-red-600">
+                  <div className="mt-2 rounded bg-danger-soft px-2 py-1 text-[11px] text-danger">
                     {message.error}
                   </div>
                 ) : null}
 
                 {message.stopReason && message.stopReason !== "completed" ? (
-                  <div className="mt-1 text-[10px] text-amber-700">
+                  <div className="mt-1 text-[10px] text-warn">
                     停止原因:{message.stopReason}(已执行 {message.steps} 步)
                     {message.stopReason === "cancelled" ? "(已中断,后端不会再继续调用模型)" : ""}
                   </div>

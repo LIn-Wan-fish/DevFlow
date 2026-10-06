@@ -35,7 +35,7 @@ export function DraftCard({ draft, onConfirm, onReject }: Props) {
   return (
     <div
       className={`mt-2 rounded border p-2 ${
-        isHighRisk ? "border-red-300 bg-red-50" : "border-line bg-canvas"
+        isHighRisk ? "border-danger bg-danger-soft" : "border-line bg-canvas"
       }`}
       data-testid={`draft-${draft.id}`}
     >
@@ -44,7 +44,7 @@ export function DraftCard({ draft, onConfirm, onReject }: Props) {
         <span className="font-medium">{draft.action}</span>
         <span className="text-muted">→ {draft.target}</span>
         {isHighRisk ? (
-          <span className="rounded bg-red-500 px-1.5 py-0.5 text-white">高风险</span>
+          <span className="rounded bg-danger px-1.5 py-0.5 text-white">高风险</span>
         ) : null}
         <span className="ml-auto text-muted">状态:{draft.status}</span>
       </div>
@@ -54,7 +54,7 @@ export function DraftCard({ draft, onConfirm, onReject }: Props) {
       {!decided ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {isHighRisk ? (
-            <label className="flex items-center gap-1 text-[11px] text-red-600">
+            <label className="flex items-center gap-1 text-[11px] text-danger">
               <input
                 type="checkbox"
                 checked={acknowledged}

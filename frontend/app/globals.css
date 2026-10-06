@@ -2,12 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * 主题变量。**明暗两套都定义在这里**,组件只用语义类名(bg-panel / text-ink …),
+ * 不写 dark: 前缀 —— 换肤只改这一处,不用去翻几十个组件。
+ *
+ * 值写成 "R G B" 三通道,是为了让 Tailwind 的透明度修饰符能用:
+ * bg-ink/10、bg-ink/[0.04] 这类写法都依赖 <alpha-value> 占位。
+ */
+:root {
+  color-scheme: light;
+
+  --canvas: 246 247 249;      /* 页面底色 */
+  --panel: 255 255 255;       /* 卡片/侧栏底色 */
+  --ink: 31 41 51;            /* 主文字,也用作深色按钮底 */
+  --muted: 107 114 128;       /* 次要文字 */
+  --line: 229 231 235;        /* 描边 */
+  --accent: 20 184 166;
+  --hover: 243 244 246;
+
+  --danger: 185 28 28;
+  --danger-soft: 254 242 242;
+  --ok: 4 120 87;
+  --ok-soft: 236 253 245;
+  --warn: 180 83 9;
+  --warn-soft: 255 251 235;
+  --info: 29 78 216;
+  --info-soft: 239 246 255;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --canvas: 13 18 26;
+  --panel: 21 27 36;
+  --ink: 226 232 240;
+  --muted: 148 163 184;
+  --line: 45 55 72;
+  --accent: 45 212 191;
+  --hover: 30 38 50;
+
+  /* 状态色在深色底上要**提亮 + 降饱和**,否则红绿糊成一团;
+     对应的底色则要**压暗**,不然在深色界面上是一块刺眼的白斑。 */
+  --danger: 248 113 113;
+  --danger-soft: 60 25 28;
+  --ok: 52 211 153;
+  --ok-soft: 18 48 40;
+  --warn: 251 191 36;
+  --warn-soft: 56 43 14;
+  --info: 125 179 250;
+  --info-soft: 22 38 64;
+}
+
 html,
 body {
   height: 100%;
   margin: 0;
-  background: #f6f7f9;
-  color: #1f2933;
+  background: rgb(var(--canvas));
+  color: rgb(var(--ink));
   font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 13px;
 }
@@ -21,6 +72,18 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: rgb(var(--muted) / 0.35);
   border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--muted) / 0.55);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 拖动面板时:禁用选中,并给 body 一个全局光标,避免鼠标移出手柄就丢样式 */
+body.resizing {
+  user-select: none;
+  cursor: col-resize;
 }
