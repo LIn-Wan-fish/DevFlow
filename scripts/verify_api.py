@@ -219,7 +219,16 @@ def main() -> int:
 
         print("== 9. 能力扩展:MCP + Skill ==")
         mcp = client.get(f"{API}/api/mcp/tools").json()
+        print(f"    (transport={mcp.get('transport')})")
+        mcp = client.get(f"{API}/api/mcp/tools").json()
         check("列出 MCP 外部工具", bool(mcp.get("tools")), f"{len(mcp.get('tools') or [])} 个")
+        mcp_tools = mcp.get("tools") or []
+        registered = [t for t in mcp_tools if t.get("registered")]
+        # 关键:服务端有这个工具 ≠ Agent 调得到它。章节 10 讲的是「扩展 ChatAgent 的能力」,
+        # 所以必须验证它们真的进了运行中的工具表。
+        check("MCP 工具真的注册进了工具表(Agent 调得到)",
+              bool(mcp_tools) and len(registered) == len(mcp_tools),
+              f"{len(registered)}/{len(mcp_tools)} 已注册")
 
         skills = client.get(f"{API}/api/skills").json().get("skills") or []
         check("列出已声明技能", bool(skills), ", ".join(s["name"] for s in skills))

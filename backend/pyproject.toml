@@ -19,6 +19,9 @@ dependencies = [
   "httpx>=0.28",
   "sse-starlette>=2.1",
   "pyyaml>=6.0",
+  # 真实 MCP 接入(stdio transport + 官方 SDK 服务端)。
+  # 实测 2.3.0 与本项目的 langchain 1.x 栈共存无冲突(和 ragas 不同,那个必须隔离)。
+  "mcp>=2.0",
 ]
 
 [dependency-groups]

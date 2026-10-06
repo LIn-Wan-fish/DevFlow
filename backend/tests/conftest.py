@@ -22,6 +22,9 @@ os.environ.setdefault("SNAPSHOT_DIR", "/app/data/snapshot")
 os.environ["LLM_MODE"] = "mock"
 os.environ["EMBED_MODE"] = "mock"
 os.environ["DATA_SOURCE"] = "snapshot"
+# MCP 测试一律走进程内 transport:不拉起子进程,单测才稳定、才不依赖外部环境。
+# 真实 stdio 由 tests/test_mcp.py 里显式构造 MCPClient(transport="stdio") 覆盖。
+os.environ["MCP_TRANSPORT"] = "inprocess"
 
 import pytest  # noqa: E402
 from sqlalchemy import create_engine  # noqa: E402

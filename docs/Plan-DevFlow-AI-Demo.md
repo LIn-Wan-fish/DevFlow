@@ -3506,3 +3506,76 @@ GET /api/reports
 推送 GitHub 时被拒:`refusing to allow a Personal Access Token to create or update workflow
 .github/workflows/ci.yml without 'workflow' scope` —— 令牌还缺 **Workflows: Read and write**。
 代码已在本地提交(4 个),等权限到位即可推。
+---
+
+# 补充记录十一:补文章所述功能(三)—— MCP 真实接入(2026-10-06)
+
+文章第 10 章「MCP 与 Skill 接入:扩展 ChatAgent 的能力」。此前的实现有两个问题:
+
+1. **只有进程内 transport** —— `stdio` 分支直接 `NotImplementedError`
+2. **更严重:Agent 根本调不到 MCP 工具** —— 它们只是 `/api/mcp/tools` 里列出来的一段展示。
+   所谓「扩展 ChatAgent 的能力」,落到代码上是**工具必须出现在 Agent 的工具表里**,
+   而这一点当时并不成立。
+
+## 实现
+
+**真 MCP server**(`app/mcp/servers/demo_server.py`,官方 SDK `mcp` 2.3.0):
+对外三个工具 —— `now` / `count_text` / `compare_semver`。
+选 `compare_semver` 是有意的:语义化版本比较(预发布版 < 同号正式版)在判断
+「这个版本能不能发布」时真的用得上,而不是为了演示硬凑一个工具。
+
+**真 stdio transport**(`app/mcp/client.py`):拉起服务端子进程 → `initialize` 握手 →
+`tools/list` / `tools/call`,全部走官方 SDK 的 JSON-RPC。
+
+**注册进工具表**(`app/mcp/bridge.py`):在 lifespan 里发现并 `register()`,
+名字带 `mcp__<server>__<tool>` 前缀避免撞名。发现失败只记警告 ——
+外部服务连不上不该让整个应用起不来。
+
+## 两个刻意的决定
+
+**① `/api/mcp/tools` 现在报告每个工具是否真的注册了。**
+
+只列出「服务端有什么」是不够的 —— 一个列得出来但 Agent 调不到的工具等于没接。
+所以响应里每个工具都带 `registered: true/false`,验收脚本也据此断言。
+这正是被这个问题咬过一次之后加的检查。
+
+**② 外部工具一律 `is_write=False`。**
+
+写操作必须走内置的草稿闸门(草稿 → 人工确认 → 审计)。
+一个外部注册进来的工具如果能直接写,整条安全链路就被绕过了。
+这条有测试守着。
+
+## 实测
+
+```
+INFO app.mcp.bridge: 已接入 3 个 MCP 工具(transport=stdio):
+  ['mcp__local__now', 'mcp__local__count_text', 'mcp__local__compare_semver']
+
+GET /api/mcp/tools → transport=stdio  已注册 = 3 / 3
+  [OK] mcp__local__now
+  [OK] mcp__local__count_text
+  [OK] mcp__local__compare_semver
+
+call_tool('compare_semver', {'left': '1.2.3-rc.1', 'right': '1.2.3'})
+  → {"result": -1, "conclusion": "1.2.3-rc.1 早于 1.2.3"}
+```
+
+## 一个查出来的坑(我的,不是代码的)
+
+我一度以为注册失败:在 `docker compose exec` 里查 `REGISTRY` 是空的。
+实际上是**新进程当然空** —— 注册发生在运行中的服务进程里。
+这也正是为什么要把 `registered` 做进 API 响应:否则这件事根本没法从外部验证。
+
+## 测试(15 条)
+
+进程内列出/前缀校验/入参校验、未知 transport 明确报错、
+**真实 stdio 列出与调用**、版本比较语义(参数化 5 例)、非法版本号,
+以及注册相关:接入后 Agent 真调得到、不重复注册、外部工具只读、
+服务端连不上时不带崩应用。
+
+另外 conftest 钉住 `MCP_TRANSPORT=inprocess`:单测不拉子进程才稳定,
+真实 stdio 由显式构造 `MCPClient(transport="stdio")` 的用例覆盖。
+
+## 遗留
+
+MCP 与 Skill 章节的 **Skill 扩展**还没做(当前只有 1 个声明式技能)。

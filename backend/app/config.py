@@ -39,12 +39,24 @@ class Settings(BaseSettings):
     max_replan: int = 2
     workflow_parallelism: int = 4
 
+    # ---- MCP 外部工具接入 ----
+    # inprocess:进程内示例工具(默认,离线可跑) | stdio:真实 MCP server 子进程 + JSON-RPC
+    mcp_transport: str = "inprocess"
+    mcp_server_command: str = ""
+    # 空格分隔的参数,例如 "-m app.mcp.servers.demo_server"
+    mcp_server_args: str = "-m app.mcp.servers.demo_server"
+
     # ---- 自动周报 ----
     weekly_report_enabled: bool = True
     # 多久检查一次是否该出周报(秒)。默认 1 小时。
     weekly_report_check_seconds: int = 3600
     # 周报统计窗口天数
     weekly_report_days: int = 7
+
+    @property
+    def mcp_server_args_list(self) -> list[str]:
+        """把 MCP_SERVER_ARGS 按空格切开。command 留空时用当前解释器。"""
+        return [part for part in (self.mcp_server_args or "").split(" ") if part]
 
     # ---- 评测 ----
     # RAGAS 评测器的地址。**它跑在独立容器里**:ragas 与本项目的 langchain 1.x 栈

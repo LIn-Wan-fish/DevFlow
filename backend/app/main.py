@@ -169,6 +169,12 @@ async def lifespan(app: FastAPI):  # noqa: ANN001, ARG001
     await _ensure_data()
     _ensure_knowledge_index()
 
+    # 接入 MCP 外部工具。**必须在这里做**:它们要进工具表,Agent 才调得到。
+    # 失败只记警告 —— 外部服务连不上不该让整个应用起不来。
+    from app.mcp.bridge import install_mcp_tools
+
+    await install_mcp_tools()
+
     # 自动周报:启动时先检查一次(保证不漏),之后按间隔轮询。
     # 进程内循环,不是生产级调度 —— 边界写在 app/reports/scheduler.py 顶部。
     stop = asyncio.Event()
