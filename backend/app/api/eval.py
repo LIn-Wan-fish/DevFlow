@@ -6,7 +6,7 @@ from app.config import settings
 from app.db.session import get_db
 from app.eval.harness import history, run_eval
 
-router = APIRouter(prefix="/api/eval", tags=["eval"])
+router = APIRouter(prefix="/api/eval", tags=["Agent 评测"])
 
 DATASET = "tests/data/eval_cases.json"
 
@@ -17,7 +17,7 @@ class EvalRequest(BaseModel):
     repo_id: int = 1
 
 
-@router.post("/run")
+@router.post("/run", summary="跑一轮评测(10 个用例 + RAGAS 判分)")
 async def run(req: EvalRequest, db: Session = Depends(get_db)) -> dict:
     try:
         result = await run_eval(db, req.dataset, mode=req.mode or settings.llm_mode,
@@ -27,6 +27,6 @@ async def run(req: EvalRequest, db: Session = Depends(get_db)) -> dict:
     return result.as_dict()
 
 
-@router.get("/runs")
+@router.get("/runs", summary="历史评测结果")
 def list_runs(db: Session = Depends(get_db)) -> list[dict]:
     return history(db)

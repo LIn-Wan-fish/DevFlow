@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -14,7 +14,7 @@ from app.db import models as m
 from app.db.session import get_db
 from app.reports import service
 
-router = APIRouter(prefix="/api/reports", tags=["reports"])
+router = APIRouter(prefix="/api/reports", tags=["自动周报"])
 
 
 def _to_out(r: m.WeeklyReport) -> dict:
@@ -29,8 +29,8 @@ def _to_out(r: m.WeeklyReport) -> dict:
     }
 
 
-@router.get("")
-def list_reports(repo_id: int | None = None, limit: int = 20,
+@router.get("", summary="周报列表(含调度配置)")
+def list_reports(repo_id: int | None = Query(None, description="仓库 ID"), limit: int = Query(20, description="最多返回多少条"),
                  db: Session = Depends(get_db)) -> dict:
     query = select(m.WeeklyReport)
     if repo_id is not None:
@@ -49,16 +49,16 @@ def list_reports(repo_id: int | None = None, limit: int = 20,
     }
 
 
-@router.get("/{report_id}")
-def get_report(report_id: int, db: Session = Depends(get_db)) -> dict:
+@router.get("/{report_id}", summary="周报详情(含正文)")
+def get_report(report_id: int = Path(..., description="周报 ID"), db: Session = Depends(get_db)) -> dict:
     report = db.get(m.WeeklyReport, report_id)
     if report is None:
         raise HTTPException(status_code=404, detail=f"周报 {report_id} 不存在")
     return {**_to_out(report), "body": report.body}
 
 
-@router.post("/generate")
-def generate_now(repo_id: int = 1, db: Session = Depends(get_db)) -> dict:
+@router.post("/generate", summary="立即生成周报(同周期幂等)")
+def generate_now(repo_id: int = Query(1, description="仓库 ID"), db: Session = Depends(get_db)) -> dict:
     """手动生成一份(幂等:本周期已有就直接返回那一份)。"""
     report = service.generate(db, repo_id, days=settings.weekly_report_days,
                               trigger=m.ReportTrigger.MANUAL.value)

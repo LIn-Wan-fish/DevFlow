@@ -30,7 +30,7 @@ from app.observability.tracing import RunTracer
 from app.schemas.chat import ChatRequest
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(tags=["SSE 流式对话"])
 
 HEARTBEAT_SECONDS = 15
 # 客户端断开后,先给 Agent 这么长时间做协作式收尾(以便部分结果落库);
@@ -54,7 +54,7 @@ def _resolve_session(db: Session, repo_id: int, session_key: str) -> m.Session:
     return row
 
 
-@router.post("/api/chat/stream")
+@router.post("/api/chat/stream", summary="流式对话(SSE,逐事件推送运行轨迹)")
 async def chat_stream(
     req: ChatRequest,
     role: str = Depends(get_role),

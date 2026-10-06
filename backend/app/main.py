@@ -30,6 +30,7 @@ logging.basicConfig(
 from app.api import (auth, chat, ci, drafts, issues, mcp as mcp_api, memory, prs, rag,
                      reports, repos, runs, skills)
 from app.api import eval as eval_api
+from app.api.descriptions import APP_DESCRIPTION, TAGS_METADATA
 from app.api.docs import REDOC_HTML, STATIC_DIR, SWAGGER_HTML
 from app.config import settings
 
@@ -205,6 +206,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN001, ARG001
 # 国内网络下经常连不上 —— 页面白屏,但服务端一切正常,很难查。
 # 改成后端自己托管静态资源(见 app/api/docs.py)。
 app = FastAPI(title="DevFlow AI", version="0.1.0", lifespan=lifespan,
+              description=APP_DESCRIPTION, openapi_tags=TAGS_METADATA,
               docs_url=None, redoc_url=None, openapi_url="/openapi.json")
 
 # Swagger UI / ReDoc 的静态资源,随仓库一起分发,不依赖任何外网 CDN
@@ -238,7 +240,7 @@ for router in (chat.router, repos.router, issues.router, prs.router, ci.router,
     app.include_router(router)
 
 
-@app.get("/api/health")
+@app.get("/api/health", tags=["系统"], summary="健康检查(当前模式与版本)")
 def health() -> dict:
     from app.api.auth import is_enforced
 

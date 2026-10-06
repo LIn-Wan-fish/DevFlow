@@ -6,10 +6,10 @@ from app.rag.pipeline import search_with_trace
 from app.rag.retriever import hybrid_search
 from app.schemas.workspace import RagQueryRequest, RecallTestRequest
 
-router = APIRouter(prefix="/api/rag", tags=["rag"])
+router = APIRouter(prefix="/api/rag", tags=["RAG 检索"])
 
 
-@router.post("/query")
+@router.post("/query", summary="混合检索(向量 + 关键词 → RRF 融合 → 重排)")
 def query(req: RagQueryRequest, db: Session = Depends(get_db)) -> dict:
     evidence = hybrid_search(db, req.repo_id, req.query, top_k=req.top_k)
     return {
@@ -23,7 +23,7 @@ def query(req: RagQueryRequest, db: Session = Depends(get_db)) -> dict:
     }
 
 
-@router.post("/recall-test")
+@router.post("/recall-test", summary="召回测试(逐阶段返回中间结果)")
 def recall_test(req: RecallTestRequest, db: Session = Depends(get_db)) -> dict:
     """四阶段中间结果:切分 / 向量召回 / 关键词召回 / RRF 融合 + 重排。
 

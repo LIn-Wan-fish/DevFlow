@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -13,7 +13,7 @@ from app.safety import drafts as draft_store
 from app.safety.policy import PermissionDenied
 from app.schemas.workspace import DraftOut
 
-router = APIRouter(prefix="/api/drafts", tags=["drafts"])
+router = APIRouter(prefix="/api/drafts", tags=["草稿与审计"])
 
 
 def _to_out(draft: m.ActionDraft) -> DraftOut:
@@ -22,8 +22,8 @@ def _to_out(draft: m.ActionDraft) -> DraftOut:
                     status=draft.status, requested_by_role=draft.requested_by_role)
 
 
-@router.get("", response_model=list[DraftOut])
-def list_drafts(status: str | None = None, repo_id: int | None = None,
+@router.get("", response_model=list[DraftOut], summary="草稿列表")
+def list_drafts(status: str | None = Query(None, description="按状态筛选,如 pending / executed / rejected"), repo_id: int | None = Query(None, description="仓库 ID"),
                 db: Session = Depends(get_db)) -> list[DraftOut]:
     query = select(m.ActionDraft)
     if status:
@@ -34,8 +34,8 @@ def list_drafts(status: str | None = None, repo_id: int | None = None,
     return [_to_out(d) for d in rows]
 
 
-@router.post("/{draft_id}/confirm", response_model=DraftOut)
-def confirm(draft_id: int, role: str = Depends(get_role),
+@router.post("/{draft_id}/confirm", response_model=DraftOut, summary="确认并执行草稿(需要 member 角色)")
+def confirm(draft_id: int = Path(..., description="草稿 ID"), role: str = Depends(get_role),
             db: Session = Depends(get_db)) -> DraftOut:
     try:
         draft = draft_store.confirm(db, draft_id, role=role)
@@ -57,8 +57,8 @@ def confirm(draft_id: int, role: str = Depends(get_role),
     return _to_out(draft)
 
 
-@router.post("/{draft_id}/reject", response_model=DraftOut)
-def reject(draft_id: int, role: str = Depends(get_role),
+@router.post("/{draft_id}/reject", response_model=DraftOut, summary="驳回草稿")
+def reject(draft_id: int = Path(..., description="草稿 ID"), role: str = Depends(get_role),
            db: Session = Depends(get_db)) -> DraftOut:
     try:
         draft = draft_store.reject(db, draft_id, role=role)
@@ -69,8 +69,8 @@ def reject(draft_id: int, role: str = Depends(get_role),
     return _to_out(draft)
 
 
-@router.get("/audit", response_model=list[dict])
-def audit(repo_id: int | None = None, db: Session = Depends(get_db)) -> list[dict]:
+@router.get("/audit", response_model=list[dict], summary="审计日志(谁在什么时候批准/拒绝了什么)")
+def audit(repo_id: int | None = Query(None, description="仓库 ID"), db: Session = Depends(get_db)) -> list[dict]:
     rows = db.scalars(select(m.AuditLog).order_by(m.AuditLog.id.desc()).limit(100)).all()
     return [
         {"id": row.id, "draft_id": row.draft_id, "action": row.action, "target": row.target,

@@ -3775,3 +3775,55 @@ standalone preset 确实被加载、静态资源可访问、ReDoc 同样不依�
 | 三个页面的全部 API 调用(带 Origin) | 14/14 通过(含 2 个写接口预检) |
 | 文档静态资源 | 4/4 返回 200 |
 | `/docs` 外部引用 | **0 个** |
+---
+
+# 补充记录十五:API 文档中文化(2026-10-06)
+
+用户反馈 `/docs` 全英文,不好读。查下来是**三层都是英文**:
+
+| 层 | 为什么是英文 |
+|---|---|
+| 接口标题 | FastAPI 在没给 `summary` 时,从**英文函数名**自动生成(`List Repos`、`Run Skill`) |
+| 分组名 | `APIRouter(tags=["repos"])` 里的标识符直接当分组名 |
+| 应用说明 | 压根没写 |
+
+中文 docstring 其实一直有,但 FastAPI 把它放在 `description` 里 ——
+Swagger 里那部分默认**折叠**在标题下面,列表上看到的仍然全是英文标题。
+
+## 改法
+
+- **26 个接口**逐个加中文 `summary`
+- **14 个分组**改成中文名,并在 `openapi_tags` 里补分组说明
+- **22 个参数**全部加中文说明(`Query(description=...)` / `Path(description=...)`)
+- 应用说明补上能力清单 + 三种模式对照表
+
+文案拆成两处:**分组与应用说明**集中在 `app/api/descriptions.py`
+(Swagger 的分组顺序就是 `TAGS_METADATA` 的顺序,按使用顺序排而不是字母序);
+**每个接口的 summary 与参数说明写在各自路由上** —— 和代码放在一起,
+改接口时顺手就改了。
+
+## 过程中的两个坑
+
+**① 路径参数不能用 `Query`。** 12 处把 `/api/repos/{repo_id}/health` 这类
+**路径参数**写成了 `Query(...)`,FastAPI 直接断言失败
+(`Cannot use Query for path param 'repo_id'`)。改成 `Path(...)`。
+
+**② `Path` 重名。** `skills.py` 用 `from pathlib import Path` 定位技能目录,
+而 FastAPI 的路径参数校验器**也叫 `Path`** —— 加进导入后 `Path(__file__)`
+调到了校验器上,报的却是 "Path parameters cannot have a default value",
+看起来像参数问题,其实是导入被覆盖。最后用 `from fastapi import Path as PathParam` 区分。
+
+## 回归测试(5 条新增)
+
+逐个检查:**每个接口的 summary 含中文**(新增接口忘写就失败)、
+分组名与说明是中文、应用说明是中文且含模式对照、22 个参数都有中文说明、
+每个接口都归到了分组(没分组的会掉到 Swagger 最后的 default 区)。
+
+## 验证
+
+| 项 | 结果 |
+|---|---|
+| 后端单测 | **275 passed**(+5) |
+| 参数说明覆盖 | **22/22** |
+| 接口中文 summary | **26/26** |
+| 全链路验收 | PASS=55 FAIL=0 |

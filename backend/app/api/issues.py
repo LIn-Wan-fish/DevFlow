@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
@@ -6,17 +6,17 @@ from app.db import models as m
 from app.db.session import get_db
 from app.schemas.workspace import IssueOut
 
-router = APIRouter(prefix="/api/repos", tags=["issues"])
+router = APIRouter(prefix="/api/repos", tags=["Issue 分诊"])
 
 GROUP_KEYS = ("unarchived", "discussing", "pending_decision", "handled", "rejected", "closed")
 
 
-@router.get("/{repo_id}/issues")
+@router.get("/{repo_id}/issues", summary="Issue 列表(分组计数 + 状态/负责人/关键词筛选)")
 def list_issues(
-    repo_id: int,
-    state: str | None = None,
-    assignee: str | None = None,
-    q: str | None = None,
+    repo_id: int = Path(..., description="仓库 ID"),
+    state: str | None = Query(None, description="按状态筛选,如 open / closed"),
+    assignee: str | None = Query(None, description="按负责人筛选"),
+    q: str | None = Query(None, description="标题/正文关键词"),
     db: Session = Depends(get_db),
 ) -> dict:
     if db.get(m.Repo, repo_id) is None:

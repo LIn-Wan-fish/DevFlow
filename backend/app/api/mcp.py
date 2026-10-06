@@ -12,10 +12,10 @@ from fastapi import APIRouter
 from app.mcp.client import MCPClient
 from app.tools.registry import REGISTRY
 
-router = APIRouter(prefix="/api/mcp", tags=["mcp"])
+router = APIRouter(prefix="/api/mcp", tags=["MCP 外部工具"])
 
 
-@router.get("/tools")
+@router.get("/tools", summary="列出 MCP 外部工具(含是否已注册进工具表)")
 async def list_tools() -> dict:
     client = MCPClient()
     tools = await client.list_tools()

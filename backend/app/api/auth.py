@@ -92,9 +92,9 @@ router = None  # 由 build_router() 赋值,避免循环导入
 def build_router():  # noqa: ANN201
     from fastapi import APIRouter
 
-    api = APIRouter(prefix="/api/auth", tags=["auth"])
+    api = APIRouter(prefix="/api/auth", tags=["权限与认证"])
 
-    @api.get("/mode")
+    @api.get("/mode", summary="查询认证模式(是否强制令牌、当前是 demo 还是 enforced)")
     def mode() -> dict:
         """公开端点:如实报告当前是否有认证。
 

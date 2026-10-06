@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -7,7 +7,7 @@ from app.github.conclusions import healthy_filter
 from app.db.session import get_db
 from app.schemas.workspace import HealthOut, RepoOut, SessionOut
 
-router = APIRouter(prefix="/api/repos", tags=["repos"])
+router = APIRouter(prefix="/api/repos", tags=["仓库"])
 
 
 def _require_repo(db: Session, repo_id: int) -> m.Repo:
@@ -36,7 +36,7 @@ def health_of(db: Session, repo_id: int) -> dict:
     }
 
 
-@router.get("", response_model=list[RepoOut])
+@router.get("", response_model=list[RepoOut], summary="仓库列表")
 def list_repos(db: Session = Depends(get_db)) -> list[RepoOut]:
     repos = db.scalars(select(m.Repo).order_by(m.Repo.id)).all()
     return [
@@ -46,14 +46,14 @@ def list_repos(db: Session = Depends(get_db)) -> list[RepoOut]:
     ]
 
 
-@router.get("/{repo_id}/health", response_model=HealthOut)
-def repo_health(repo_id: int, db: Session = Depends(get_db)) -> HealthOut:
+@router.get("/{repo_id}/health", response_model=HealthOut, summary="仓库健康总览(右栏六项统计)")
+def repo_health(repo_id: int = Path(..., description="仓库 ID"), db: Session = Depends(get_db)) -> HealthOut:
     _require_repo(db, repo_id)
     return HealthOut(**health_of(db, repo_id))
 
 
-@router.get("/{repo_id}/sessions", response_model=list[SessionOut])
-def list_sessions(repo_id: int, db: Session = Depends(get_db)) -> list[SessionOut]:
+@router.get("/{repo_id}/sessions", response_model=list[SessionOut], summary="会话列表")
+def list_sessions(repo_id: int = Path(..., description="仓库 ID"), db: Session = Depends(get_db)) -> list[SessionOut]:
     _require_repo(db, repo_id)
     rows = db.scalars(select(m.Session).where(m.Session.repo_id == repo_id)
                       .order_by(m.Session.id)).all()

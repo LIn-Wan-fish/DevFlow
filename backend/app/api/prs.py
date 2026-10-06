@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -6,11 +6,11 @@ from app.db import models as m
 from app.db.session import get_db
 from app.schemas.workspace import PrFileOut, PrOut
 
-router = APIRouter(prefix="/api/repos", tags=["prs"])
+router = APIRouter(prefix="/api/repos", tags=["PR 审查"])
 
 
-@router.get("/{repo_id}/prs")
-def list_prs(repo_id: int, db: Session = Depends(get_db)) -> dict:
+@router.get("/{repo_id}/prs", summary="PR 列表(含高风险路径标记)")
+def list_prs(repo_id: int = Path(..., description="仓库 ID"), db: Session = Depends(get_db)) -> dict:
     if db.get(m.Repo, repo_id) is None:
         raise HTTPException(status_code=404, detail=f"仓库 {repo_id} 不存在")
 

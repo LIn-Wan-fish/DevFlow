@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.core.memory import MemHub
@@ -14,12 +14,12 @@ from app.schemas.memory import (
     MemoryOverview,
 )
 
-router = APIRouter(prefix="/api/memory", tags=["memory"])
+router = APIRouter(prefix="/api/memory", tags=["长期记忆"])
 _hub = MemHub()
 
 
-@router.get("/candidates", response_model=MemoryOverview)
-def overview(repo_id: int = 1, db: Session = Depends(get_db)) -> MemoryOverview:
+@router.get("/candidates", response_model=MemoryOverview, summary="记忆候选与已生效条目")
+def overview(repo_id: int = Query(1, description="仓库 ID"), db: Session = Depends(get_db)) -> MemoryOverview:
     candidates = _hub.pending(db, repo_id)
     entries = _hub.approved(db, repo_id)
     return MemoryOverview(
@@ -36,8 +36,8 @@ def overview(repo_id: int = 1, db: Session = Depends(get_db)) -> MemoryOverview:
     )
 
 
-@router.post("/candidates/{candidate_id}/approve", response_model=MemoryEntryOut)
-def approve(candidate_id: int, body: ApproveRequest | None = None,
+@router.post("/candidates/{candidate_id}/approve", response_model=MemoryEntryOut, summary="批准记忆候选(批准后才参与召回)")
+def approve(candidate_id: int = Path(..., description="记忆候选 ID"), body: ApproveRequest | None = None,
             db: Session = Depends(get_db)) -> MemoryEntryOut:
     try:
         entry = _hub.approve(db, candidate_id,
@@ -48,8 +48,8 @@ def approve(candidate_id: int, body: ApproveRequest | None = None,
                           source_candidate_id=entry.source_candidate_id)
 
 
-@router.post("/candidates/{candidate_id}/reject", response_model=MemoryCandidateOut)
-def reject(candidate_id: int, db: Session = Depends(get_db)) -> MemoryCandidateOut:
+@router.post("/candidates/{candidate_id}/reject", response_model=MemoryCandidateOut, summary="驳回记忆候选")
+def reject(candidate_id: int = Path(..., description="记忆候选 ID"), db: Session = Depends(get_db)) -> MemoryCandidateOut:
     try:
         candidate = _hub.reject(db, candidate_id)
     except LookupError as exc:

@@ -10,7 +10,8 @@ from pathlib import Path
 
 import asyncio
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import Path as PathParam
 from pydantic import BaseModel
 
 from app.db.session import get_db
@@ -18,7 +19,7 @@ from app.skills.runtime import SkillFormatError, SkillInputError, SkillRuntime
 from app.tools.registry import REGISTRY, ToolContext, execute
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/api/skills", tags=["skills"])
+router = APIRouter(prefix="/api/skills", tags=["Skill 技能"])
 
 SKILLS_DIR = Path(__file__).resolve().parents[1] / "skills" / "skills"
 
@@ -37,7 +38,7 @@ def _skill_paths() -> list[Path]:
     return sorted(SKILLS_DIR.glob("*.yaml"))
 
 
-@router.get("")
+@router.get("", summary="列出技能(含是否已注册进工具表)")
 def list_skills() -> dict:
     runtime = _runtime()
     skills = []
@@ -70,8 +71,8 @@ def _executor_for(db: Session):
     return run
 
 
-@router.post("/{name}/run")
-async def run_skill(name: str, body: SkillRunRequest | None = None,
+@router.post("/{name}/run", summary="执行技能(按声明顺序跑步骤)")
+async def run_skill(name: str = PathParam(..., description="技能名,见 /api/skills"), body: SkillRunRequest | None = None,
                     db: Session = Depends(get_db)) -> dict:
     runtime = _runtime()
     target = None

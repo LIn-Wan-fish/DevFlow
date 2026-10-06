@@ -88,3 +88,63 @@ def test_redoc_也不依赖外部_cdn(client):
     html = client.get("/redoc").text
     assert "cdn.jsdelivr.net" not in html
     assert "/static/swagger/redoc.standalone.js" in html
+
+# --------------------------------------------------------------------------- 中文文档
+
+
+def _is_chinese(text: str) -> bool:
+    return any("\u4e00" <= ch <= "\u9fff" for ch in (text or ""))
+
+
+def test_每个接口都有中文_summary(spec):
+    """回归:不给 summary 时 FastAPI 会拿英文函数名自动生成(`List Repos`、`Run Skill`)。
+
+    那样整个文档页看起来就是全英文的 —— 而这个页面的读者是中文使用者。
+    """
+    missing = []
+    for path, item in spec["paths"].items():
+        for method, op in item.items():
+            if method not in ("get", "post", "put", "delete", "patch"):
+                continue
+            summary = op.get("summary") or ""
+            if not _is_chinese(summary):
+                missing.append(f"{method.upper()} {path} -> {summary!r}")
+    assert not missing, "以下接口缺少中文 summary:\n" + "\n".join(missing)
+
+
+def test_分组名与分组说明都是中文(spec):
+    tags = spec.get("tags") or []
+    assert tags, "必须声明 openapi_tags,否则 Swagger 上只有光秃秃的英文分组名"
+    for tag in tags:
+        assert _is_chinese(tag["name"]), tag
+        assert _is_chinese(tag.get("description", "")), tag
+
+
+def test_应用说明是中文(spec):
+    description = spec["info"].get("description") or ""
+    assert _is_chinese(description)
+    # 模式说明是排查问题时最常看的一段,不该丢
+    assert "LLM_MODE" in description and "DATA_SOURCE" in description
+
+
+def test_参数都有中文说明(spec):
+    """参数名(`repo_id`)本身英文没问题,但只有名字没有说明,使用者只能猜。"""
+    missing = []
+    for path, item in spec["paths"].items():
+        for method, op in item.items():
+            if method not in ("get", "post", "put", "delete", "patch"):
+                continue
+            for prm in op.get("parameters", []):
+                if not _is_chinese(prm.get("description", "")):
+                    missing.append(f"{method.upper()} {path} -> {prm['name']}")
+    assert not missing, "以下参数缺少中文说明:\n" + "\n".join(missing)
+
+
+def test_每个接口都归到了分组(spec):
+    """没分组的接口会掉到 Swagger 最后的 default 区,混在一起不好找。"""
+    orphan = [
+        f"{m.upper()} {p}" for p, item in spec["paths"].items()
+        for m, op in item.items()
+        if m in ("get", "post", "put", "delete", "patch") and not op.get("tags")
+    ]
+    assert not orphan, f"以下接口没有分组:{orphan}"

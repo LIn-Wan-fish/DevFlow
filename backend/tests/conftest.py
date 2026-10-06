@@ -92,3 +92,10 @@ def client(indexed_store: Session):
     app.dependency_overrides[get_tracer] = lambda: RunTracer(indexed_store)
     yield TestClient(app)
     app.dependency_overrides.clear()
+
+@pytest.fixture(scope="session")
+def spec():
+    """OpenAPI 规范。文档相关断言都基于它,不必每个用例各拉一次。"""
+    from app.main import app
+
+    return app.openapi()
