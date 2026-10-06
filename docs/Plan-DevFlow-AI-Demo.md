@@ -3579,3 +3579,78 @@ call_tool('compare_semver', {'left': '1.2.3-rc.1', 'right': '1.2.3'})
 ## 遗留
 
 MCP 与 Skill 章节的 **Skill 扩展**还没做(当前只有 1 个声明式技能)。
+---
+
+# 补充记录十二:补文章所述功能(四)—— Skill 扩展(2026-10-06)
+
+文章第 10 章的另一半。此前只有一个 `repo_health_report.yaml`,而且 ——
+**和 MCP 一样的问题 —— Agent 调不到它**。
+章节 10.2 的标题就是「MCP 与 Skill **怎么进入 ChatAgent**」,所以这一跳才是关键。
+
+## 实现
+
+**技能库**(`app/skills/skills/*.yaml`,4 个):
+
+| 技能 | 步骤 |
+|---|---|
+| `repo_health_report` | `repo_health` → `weekly_report` |
+| `ci_failure_triage` | `debug_ci` → `search_code` |
+| `issue_intake` | `analyze_issue` → `search_docs` |
+| `release_readiness` | `run_workflow` → `repo_health` |
+
+**桥接**(`app/skills/bridge.py`):把每个技能注册成 Agent 工具 `skill__<name>`,
+在 lifespan 里执行。**必须在 MCP 之后** —— 技能是否算写操作要查工具表,
+而工具表刚刚才被 MCP 补进外部工具。
+
+## 三个处理细节
+
+**① `repo_id` 由上下文注入,不进模型可见的参数表。**
+它就在 `ToolContext` 里。让模型去猜仓库 ID,只是多一类填错的可能。
+但这里踩了一个自己挖的坑:摘掉之后 `validate()` 仍按**完整 schema** 校验必填,
+于是模型怎么调都会因为「repo_id 必填但缺失」被拒 —— 必须在桥接层把它补回 inputs。
+这一条有测试盯着(`test_repo_id_不暴露给模型` + `test_通过工具路径能跑通整个技能`)。
+
+**② 含写操作的技能标记 `is_write=True`。**
+技能步骤里若出现 `draft_action`,整条技能要过同一道安全闸门。
+包一层封装不能成为绕过人工确认的后门 —— 有测试用临时技能文件验证。
+
+**③ 技能运行时改为异步。**
+同步版只能用 `asyncio.run`,而 Agent 的工具处理器本身在事件循环里跑,
+`asyncio.run` 会直接抛错。改成 `async def run` 之后两边都能用
+(API 端点改成 `async def`,桥接直接 `await`)。这导致两个老测试要跟着改 —— 值得,
+因为「技能能被 Agent 调用」是这一章的核心诉求。
+
+## 顺带
+
+`/api/skills` 增加 `registered` 字段,和 `/api/mcp/tools` 保持一致的可验证性:
+**能列出来 ≠ Agent 调得到**。验收脚本据此断言。
+
+服务启动日志:
+
+```
+INFO app.skills.bridge: 已接入 4 个技能:
+  ['skill__ci_failure_triage', 'skill__issue_intake',
+   'skill__release_readiness', 'skill__repo_health_report']
+```
+
+## 测试(8 条)
+
+技能库可解析、接入后 Agent 真调得到、不重复注册、`repo_id` 不暴露给模型、
+通过工具路径跑通整个技能、含写操作的技能被标写、只读技能不误标、
+坏技能文件跳过而不是整个失败、运行时必须是异步的。
+
+## 文章功能清单至此全部覆盖
+
+| 文章要求 | 状态 |
+|---|---|
+| 仓库健康 / Issue 分诊 / PR 审查 / CI 排障 | ✅ |
+| RAG 工程化检索(混合召回/重排/引用)+ RAGAS | ✅ |
+| Agent Loop / 专用 Agent / 多 Agent 调度 | ✅ |
+| 上下文预算 / 长期记忆 / 记忆审批 | ✅ |
+| **自动周报** | ✅ |
+| **MCP 与 Skill 扩展** | ✅ |
+| 安全草稿 / 人工确认 / 审计 | ✅ |
+| SSE 流式 / 运行轨迹 / 前端工作台 | ✅ |
+| Agent Eval | ✅ |
+
+(第 16 章「面试准备」不是功能,不在范围内。)

@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 from app.db.session import get_db
 from app.skills.runtime import SkillFormatError, SkillInputError, SkillRuntime
-from app.tools.registry import ToolContext, execute
+from app.tools.registry import REGISTRY, ToolContext, execute
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/api/skills", tags=["skills"])
@@ -51,6 +51,9 @@ def list_skills() -> dict:
             "description": skill.description,
             "steps": [step.get("tool") for step in skill.steps],
             "input_schema": skill.input_schema,
+            # 关键:能列出来 ≠ Agent 调得到。章节 10.2 讲的是
+            # 「Skill 怎么进入 ChatAgent」,所以如实报告它有没有真的进工具表。
+            "registered": f"skill__{skill.name}" in REGISTRY,
         })
     return {"skills": skills}
 
@@ -58,18 +61,18 @@ def list_skills() -> dict:
 def _executor_for(db: Session):
     """技能步骤统一走请求级会话,保证接口看到的就是当前库里的数据。"""
 
-    def run(tool: str, args: dict):
+    async def run(tool: str, args: dict):
         params = dict(args or {})
         repo_id = int(params.pop("repo_id", 1))
         ctx = ToolContext(db=db, repo_id=repo_id)
-        return asyncio.run(execute(tool, params, ctx))
+        return await execute(tool, params, ctx)
 
     return run
 
 
 @router.post("/{name}/run")
-def run_skill(name: str, body: SkillRunRequest | None = None,
-              db: Session = Depends(get_db)) -> dict:
+async def run_skill(name: str, body: SkillRunRequest | None = None,
+                    db: Session = Depends(get_db)) -> dict:
     runtime = _runtime()
     target = None
     for path in _skill_paths():
@@ -84,7 +87,7 @@ def run_skill(name: str, body: SkillRunRequest | None = None,
         raise HTTPException(status_code=404, detail=f"技能 {name} 不存在")
 
     try:
-        result = runtime.run(
+        result = await runtime.run(
             target,
             (body.inputs if body else {}) or {},
             executor=_executor_for(db),

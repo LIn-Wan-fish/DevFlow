@@ -1,0 +1,24 @@
+name: issue_intake
+description: 新 Issue 分诊:分析优先级与复杂度,并检索项目文档里可能相关的说明
+input_schema:
+  type: object
+  required: [repo_id, number]
+  properties:
+    repo_id:
+      type: integer
+      description: 仓库 ID(由上下文提供,调用时不必填)
+    number:
+      type: integer
+      description: Issue 编号
+    query:
+      type: string
+      description: 检索关键词,留空则按 Issue 标题检索
+steps:
+  - tool: analyze_issue
+    args:
+      number: "{{ number }}"
+      repo_id: "{{ repo_id }}"
+  - tool: search_docs
+    args:
+      query: "{{ query }}"
+      repo_id: "{{ repo_id }}"

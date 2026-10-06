@@ -232,14 +232,35 @@ def main() -> int:
 
         skills = client.get(f"{API}/api/skills").json().get("skills") or []
         check("列出已声明技能", bool(skills), ", ".join(s["name"] for s in skills))
+        registered_skills = [s for s in skills if s.get("registered")]
+        check("技能真的注册进了工具表(Agent 调得到)",
+              bool(skills) and len(registered_skills) == len(skills),
+              f"{len(registered_skills)}/{len(skills)} 已注册")
 
-        if skills:
-            skill_run = client.post(f"{API}/api/skills/{skills[0]['name']}/run",
-                                    json={"inputs": {"repo_id": 1}})
+        # 挑一个**只依赖 repo_id 就能跑**的技能。
+        # 原先写死用 skills[0],新增技能后按字母序第一个变成了必填 number 的那种,
+        # 于是这条断言因为入参不合法而误报失败(实测踩到)。
+        runnable = [
+            s for s in skills
+            if set((s.get("input_schema") or {}).get("required") or []) <= {"repo_id"}
+        ]
+        # 再排掉含 run_workflow 的重技能:真实模型下要跑几分钟,而且这里验的是
+        # 「技能能按声明顺序执行」,不需要捎带跑一遍多 Agent 工作流。
+        light = [s for s in runnable if "run_workflow" not in (s.get("steps") or [])]
+        candidates = light or runnable
+        if candidates:
+            skill_run = client.post(f"{API}/api/skills/{candidates[0]['name']}/run",
+                                    json={"inputs": {"repo_id": 1}}, timeout=600)
             check("技能可按声明顺序执行", skill_run.status_code == 200
                   and skill_run.json().get("steps_executed", 0) >= 1,
                   f"{skill_run.json().get('steps_executed')} 步")
-            missing = client.post(f"{API}/api/skills/{skills[0]['name']}/run",
+            # 缺必填要挑一个**真的有必填参数**的技能来验
+            with_required = [
+                s for s in skills
+                if (s.get("input_schema") or {}).get("required")
+            ]
+            probe = with_required[0] if with_required else runnable[0]
+            missing = client.post(f"{API}/api/skills/{probe['name']}/run",
                                   json={"inputs": {}})
             check("技能缺必填入参返回 422", missing.status_code == 422)
 

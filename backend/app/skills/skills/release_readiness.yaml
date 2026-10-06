@@ -1,0 +1,20 @@
+name: release_readiness
+description: 发布前检查:跑一遍多 Agent 协作分析判断能否发布,并附上仓库健康数据
+input_schema:
+  type: object
+  required: [repo_id]
+  properties:
+    repo_id:
+      type: integer
+      description: 仓库 ID(由上下文提供,调用时不必填)
+    question:
+      type: string
+      description: 发布判断的问题描述,留空则用默认问法
+steps:
+  - tool: run_workflow
+    args:
+      question: "{{ question }}"
+      repo_id: "{{ repo_id }}"
+  - tool: repo_health
+    args:
+      repo_id: "{{ repo_id }}"

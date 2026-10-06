@@ -175,6 +175,12 @@ async def lifespan(app: FastAPI):  # noqa: ANN001, ARG001
 
     await install_mcp_tools()
 
+    # Skill 要在 MCP **之后**注册:技能是否算写操作要查工具表,
+    # 而工具表刚刚才被 MCP 补进外部工具。
+    from app.skills.bridge import install_skill_tools
+
+    install_skill_tools()
+
     # 自动周报:启动时先检查一次(保证不漏),之后按间隔轮询。
     # 进程内循环,不是生产级调度 —— 边界写在 app/reports/scheduler.py 顶部。
     stop = asyncio.Event()

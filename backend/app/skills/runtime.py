@@ -57,13 +57,18 @@ class SkillRuntime:
             if key in inputs and spec.get("type") == "integer" and not isinstance(inputs[key], int):
                 raise SkillInputError(f"参数 {key} 应为整数")
 
-    def run(
+    async def run(
         self,
         skill: Skill,
         inputs: dict,
         *,
         executor: Callable[[str, dict], Any] | None = None,
     ) -> dict:
+        """按声明顺序执行步骤。
+
+        **异步**:技能要被 Agent 当工具调用,而 Agent 的工具处理器本身是 async 的 ——
+        同步版本只能用 asyncio.run,那会在已有事件循环里直接抛错。
+        """
         self.validate(skill, inputs)
         executor = executor or self._default_executor
         results: list[dict] = []
@@ -72,7 +77,7 @@ class SkillRuntime:
             if not tool:
                 raise SkillFormatError("步骤缺少 tool 字段")
             args = {k: self._resolve(v, inputs) for k, v in (step.get("args") or {}).items()}
-            results.append({"tool": tool, "args": args, "result": executor(tool, args)})
+            results.append({"tool": tool, "args": args, "result": await executor(tool, args)})
         return {"skill": skill.name, "steps_executed": len(results), "results": results}
 
     @staticmethod
@@ -83,13 +88,11 @@ class SkillRuntime:
         return value
 
     @staticmethod
-    def _default_executor(tool: str, args: dict) -> Any:
-        import asyncio
-
+    async def _default_executor(tool: str, args: dict) -> Any:
         from app.db.session import SessionLocal
         from app.tools.registry import ToolContext, execute
 
         with SessionLocal() as db:
             repo_id = int(args.pop("repo_id", 1))
             ctx = ToolContext(db=db, repo_id=repo_id)
-            return asyncio.run(execute(tool, args, ctx))
+            return await execute(tool, args, ctx)

@@ -1,0 +1,24 @@
+name: ci_failure_triage
+description: 对一个失败的 CI 做根因排障,并检索与之相关的代码,给出可执行的下一步
+input_schema:
+  type: object
+  required: [repo_id, number]
+  properties:
+    repo_id:
+      type: integer
+      description: 仓库 ID(由上下文提供,调用时不必填)
+    number:
+      type: integer
+      description: 失败的 CI 运行编号
+    query:
+      type: string
+      description: 用来检索相关代码的关键词(例如报错里的函数名)
+steps:
+  - tool: debug_ci
+    args:
+      number: "{{ number }}"
+      repo_id: "{{ repo_id }}"
+  - tool: search_code
+    args:
+      query: "{{ query }}"
+      repo_id: "{{ repo_id }}"

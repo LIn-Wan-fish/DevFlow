@@ -37,23 +37,25 @@ def test_skill_文件可解析且步骤非空():
     assert skill.steps
 
 
-def test_skill_入参校验拒绝缺字段():
+async def test_skill_入参校验拒绝缺字段():
+    # runtime.run 是异步的:技能要被 Agent 当工具调用,同步版只能用 asyncio.run,
+    # 那会在已有事件循环里直接抛错。
     runtime = SkillRuntime()
     skill = runtime.load(SKILL_PATH)
     with pytest.raises(SkillInputError):
-        runtime.run(skill, {}, executor=lambda tool, args: {"ok": True})
+        await runtime.run(skill, {}, executor=lambda tool, args: {"ok": True})
 
 
-def test_skill_按声明顺序执行步骤():
+async def test_skill_按声明顺序执行步骤():
     runtime = SkillRuntime()
     skill = runtime.load(SKILL_PATH)
     calls = []
 
-    def executor(tool, args):  # noqa: ANN001
+    async def executor(tool, args):  # noqa: ANN001
         calls.append((tool, args))
         return {"ok": True}
 
-    result = runtime.run(skill, {"repo_id": 1}, executor=executor)
+    result = await runtime.run(skill, {"repo_id": 1}, executor=executor)
     assert result["steps_executed"] == len(skill.steps)
     assert [c[0] for c in calls] == [s["tool"] for s in skill.steps]
     assert calls[0][1]["repo_id"] == 1, "占位符必须被真实入参替换"
