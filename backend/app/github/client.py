@@ -15,6 +15,9 @@ from typing import Any
 
 import httpx
 
+from app.config import settings
+from app.core.cache import get_cache
+
 
 class GitHubError(Exception):
     """GitHub 调用的领域异常基类。"""
@@ -43,7 +46,13 @@ class GitHubRateLimited(GitHubError):
 # url -> (etag, body)。做成进程级共享:原先挂在实例上,而 provider 每次调用都新建
 # client,缓存永远命中不了,等于没有。304 必须返回缓存体 —— 原实现把 304 当空结果,
 # 内容没变时反而会拿到空列表,是错的。
-_ETAG_CACHE: dict[str, tuple[str, object]] = {}
+def _etag_key(url: str) -> str:
+    """ETag 缓存的键。
+
+    原先这里是模块级字典 `_ETAG_CACHE` —— 单进程可用,多副本下每个副本各存一份,
+    命中率下降(不致命,但会白花 GitHub 配额与时间)。改走共享缓存。
+    """
+    return f"gh:etag:{url}"
 
 
 def extract_log_text(payload: bytes) -> str:
@@ -125,9 +134,11 @@ class GitHubClient:
 
         for attempt in range(self._max_retries + 1):
             headers = {}
-            cached = _ETAG_CACHE.get(url)
+            # 缓存走 get_cache():进程内实现只在单副本下正确,
+            # 多副本时必须配 REDIS_URL(见 app/core/cache.py)
+            cached = await get_cache().get_json(_etag_key(url))
             if cached:
-                headers["If-None-Match"] = cached[0]
+                headers["If-None-Match"] = cached.get("etag", "")
 
             # 翻页时 url 已经是完整地址,不能再带 params
             is_absolute = url.startswith("http")
@@ -147,11 +158,14 @@ class GitHubClient:
 
             if response.status_code == 304:
                 # 内容没变:返回缓存体,而不是空结果
-                return (cached[1] if cached else None), response.headers
+                return (cached.get("body") if cached else None), response.headers
             if response.status_code in (200, 201):
                 body = response.json()
                 if new_etag := response.headers.get("ETag"):
-                    _ETAG_CACHE[url] = (new_etag, body)
+                    await get_cache().set_json(
+                        _etag_key(url), {"etag": new_etag, "body": body},
+                        ttl=settings.etag_ttl_seconds,
+                    )
                 return body, response.headers
             if response.status_code == 401:
                 raise GitHubAuthError("GitHub token 无效或已过期")

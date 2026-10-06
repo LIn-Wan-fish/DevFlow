@@ -39,7 +39,28 @@ logger = logging.getLogger(__name__)
 MILVUS_WAIT_SECONDS = 90
 
 
-def _ensure_knowledge_index() -> None:
+async def _ensure_knowledge_index() -> None:
+    """确保知识库索引存在且**完整**。
+
+    必须在锁里做:启动时每个 worker / 每个副本都会跑一遍,
+    没有锁的话它们会**并发地「先删后建」**,结果是切分被重复写入
+    (实测 29 个切分变成了 58 个)。
+    """
+    import asyncio
+
+    from app.core.cache import get_cache
+
+    cache = get_cache()
+    if not await cache.acquire_lock("knowledge-index", ttl=300):
+        logger.info("另一个实例正在建索引,跳过")
+        return
+    try:
+        await asyncio.to_thread(_ensure_knowledge_index_sync)
+    finally:
+        await cache.release_lock("knowledge-index")
+
+
+def _ensure_knowledge_index_sync() -> None:
     from sqlalchemy import func, select
 
     from app.db import models as m
@@ -69,7 +90,25 @@ def _ensure_knowledge_index() -> None:
             select(func.count()).select_from(m.Chunk).where(m.Chunk.repo_id == repo.id)
         ) or 0
         if existing:
-            logger.info("知识库已有 %s 个切分,跳过索引", existing)
+            # **光看 Postgres 的切分数不够**。向量库的数据可能因为卷被重建而丢失,
+            # 那时这里会以为"已索引"并跳过 —— 于是索引再也不会重建,
+            # 向量检索静默返回空,而关键词检索照常工作:表面上"还能用",
+            # 只是召回率悄悄掉一半,极难发现(实测踩到)。
+            # 所以要拿向量库里的实际条数对一遍。
+            try:
+                indexed = get_vector_store().count(repo.id)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("无法读取向量库条数(%s),跳过完整性检查", exc)
+                indexed = existing
+            if indexed >= existing:
+                logger.info("知识库已有 %s 个切分、%s 条向量,跳过索引", existing, indexed)
+                return
+            logger.warning(
+                "索引不完整:Postgres 有 %s 个切分,向量库只有 %s 条 —— 重建索引",
+                existing, indexed,
+            )
+            stats = index_repo(db, repo.id)   # 幂等:内部先删后建
+            logger.info("知识库重建完成:%s", stats)
             return
         stats = index_repo(db, repo.id)
         logger.info("知识库索引完成:%s", stats)
@@ -168,7 +207,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN001, ARG001
 
     _ensure_schema()
     await _ensure_data()
-    _ensure_knowledge_index()
+    await _ensure_knowledge_index()
 
     # 接入 MCP 外部工具。**必须在这里做**:它们要进工具表,Agent 才调得到。
     # 失败只记警告 —— 外部服务连不上不该让整个应用起不来。

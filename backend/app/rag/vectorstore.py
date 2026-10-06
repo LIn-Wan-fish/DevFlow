@@ -20,6 +20,8 @@ class VectorStore(Protocol):
 
     def delete_repo(self, repo_id: int) -> None: ...
 
+    def count(self, repo_id: int) -> int: ...
+
     def search(
         self, vector: list[float], repo_id: int, limit: int
     ) -> list[tuple[int, float]]: ...
@@ -43,6 +45,9 @@ class InMemoryVectorStore:
     def delete_repo(self, repo_id: int) -> None:  # noqa: D102
         with self._lock:
             self._rows = {k: v for k, v in self._rows.items() if v[0] != repo_id}
+
+    def count(self, repo_id: int) -> int:  # noqa: D102
+        return sum(1 for _, (rid, _vec) in self._rows.items() if rid == repo_id)
 
     def search(self, vector, repo_id, limit):  # noqa: ANN001, D102
         def cos(a: list[float], b: list[float]) -> float:
@@ -92,6 +97,20 @@ class MilvusVectorStore:
 
     def delete_repo(self, repo_id: int) -> None:
         self._client.delete(collection_name=self._collection, filter=f"repo_id == {repo_id}")
+
+    def count(self, repo_id: int) -> int:
+        """这个仓库在向量库里到底有多少条向量。
+
+        启动时判断"要不要重建索引"必须看这个数,而不是 Postgres 的切分数 ——
+        Milvus 的数据可能因为卷被重建而丢失,那时光看 Postgres 会以为索引还在,
+        于是**永远不重建,向量检索静默返回空**(实测踩到)。
+        """
+        res = self._client.query(
+            collection_name=self._collection,
+            filter=f"repo_id == {repo_id}",
+            output_fields=["count(*)"],
+        )
+        return int(res[0].get("count(*)", 0)) if res else 0
 
     def search(self, vector, repo_id, limit):  # noqa: ANN001
         res = self._client.search(

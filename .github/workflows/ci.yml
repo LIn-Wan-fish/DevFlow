@@ -51,3 +51,10 @@ jobs:
         run: npm install
       - name: 跑单测
         run: npm test
+
+      - name: 生产构建
+        # 必须单独跑一次 next build。**单测通过不等于构建通过** ——
+        # 实测踩到过:新加了 react-markdown 依赖而 frontend 镜像里没装,
+        # `npm test` 全绿,`next build` 直接 Module not found、整站起不来。
+        # 开发模式(next dev)是按需编译的,暴露得更晚。
+        run: npm run build

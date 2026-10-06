@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     max_replan: int = 2
     workflow_parallelism: int = 4
 
+    # ---- 跨进程共享 ----
+    # 空 = 退回进程内实现(单副本可用)。多副本部署必须配置。
+    redis_url: str = ""
+    # ETag 缓存存活时间。太长会看到过期数据,太短就白缓存了。
+    etag_ttl_seconds: int = 900
+
     # ---- 跨域 ----
     # 前端(http://localhost:3000)与后端(8000)是**不同源**的,
     # 浏览器会拦下所有没有 CORS 头的响应 —— 页面会表现成"打不开/没数据"。

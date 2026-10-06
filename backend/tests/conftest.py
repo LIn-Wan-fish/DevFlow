@@ -25,6 +25,11 @@ os.environ["DATA_SOURCE"] = "snapshot"
 # MCP 测试一律走进程内 transport:不拉起子进程,单测才稳定、才不依赖外部环境。
 # 真实 stdio 由 tests/test_mcp.py 里显式构造 MCPClient(transport="stdio") 覆盖。
 os.environ["MCP_TRANSPORT"] = "inprocess"
+# 单测必须自足:钉掉 REDIS_URL 让缓存退回进程内实现。
+# 否则测试会去连真 Redis,而且模块级单例把客户端绑在**上一个测试的事件循环**上,
+# 下一个测试就报 "Event loop is closed"(实测踩到)。
+# 真 Redis 的行为由 tests/test_cache.py 里显式构造 RedisCache 的用例覆盖。
+os.environ["REDIS_URL"] = ""
 
 import pytest  # noqa: E402
 from sqlalchemy import create_engine  # noqa: E402

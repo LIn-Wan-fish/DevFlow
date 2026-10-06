@@ -98,6 +98,19 @@ services:
   # RAGAS 评测器。**单独一个容器是必须的,不是随意拆分**:
   # ragas 与主程序的 langchain 1.x 栈无法共存(新版导入即崩、老版强降 langchain 把主程序打挂),
   # 详细原因写在 services/ragas_eval/app.py 顶部。它的依赖树被限制在这个容器里。
+  redis:
+    # 只做缓存与调度锁,不存业务数据 —— 所以关掉持久化:
+    # 重启后缓存丢了重新拉一遍即可,不值得为它引入 AOF/RDB 的复杂度。
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    # 刻意**不映射到宿主机端口**:调试用 docker compose exec 即可,
+    # 少一个对外暴露面
+
   ragas-eval:
     build:
       context: ./services/ragas_eval
