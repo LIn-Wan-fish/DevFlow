@@ -96,11 +96,14 @@ describe("协作图组件", () => {
     expect(screen.getByText(/需要人工判断/)).toBeTruthy();
   });
 
-  test("没有发现时明确说明,不留空白", async () => {
+  test("没有发现时整个不渲染", async () => {
+    // 普通问答(单工具路径)本来就不会产生发现。给它一个空盒子是噪音 ——
+    // 实测用户会以为"协作图坏了",而不是意识到"这次本来就没有协作"。
     findings.mockResolvedValue({ run_id: 9, findings: [], active_finding_ids: [],
                                  edges: [], conflicts: [], authors: [] });
-    render(<CollaborationGraph runId={9} />);
-    await waitFor(() => expect(screen.getByText(/没有产生发现/)).toBeTruthy());
+    const { container } = render(<CollaborationGraph runId={9} />);
+    await waitFor(() => expect(findings).toHaveBeenCalled());
+    await waitFor(() => expect(container.textContent).toBe(""));
   });
 
   test("接口失败时显示原因", async () => {

@@ -8,7 +8,7 @@ import type { ChatMessage, SseEvent } from "@/lib/types";
 import CollaborationGraph from "./CollaborationGraph";
 import DraftCard from "./DraftCard";
 import EvidenceList from "./EvidenceList";
-import Markdown from "./Markdown";
+import StreamingMarkdown from "./StreamingMarkdown";
 import RunTrace from "./RunTrace";
 
 /**
@@ -49,7 +49,17 @@ export function ChatPanel({
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  // 用户是否还"贴着底部"。手动往上滚之后就不该再把他拽回去 ——
+  // 否则流式期间根本没法回看上文。
+  const stickRef = useRef(true);
   const abortRef = useRef<AbortController | null>(null);
+
+  const onListScroll = () => {
+    const el = listRef.current;
+    if (!el) return;
+    stickRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+  };
 
   useEffect(() => {
     if (quoted) {
@@ -59,7 +69,11 @@ export function ChatPanel({
   }, [quoted, onQuotedConsumed]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // **不要用 scrollIntoView**:它会把所有可滚动祖先都滚一遍,包括 body ——
+    // 表现就是"页面被推下去,而滚轮又被对话栏捕获,回不来"(实测踩到)。
+    // 直接设容器的 scrollTop,只影响这一个容器。
+    const el = listRef.current;
+    if (el && stickRef.current) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   const send = async (text: string) => {
@@ -190,7 +204,7 @@ export function ChatPanel({
 
   return (
     <section className="flex h-full min-w-0 flex-1 flex-col bg-canvas">
-      <div className="flex-1 overflow-y-auto px-5 py-4">
+      <div ref={listRef} onScroll={onListScroll} className="flex-1 overflow-y-auto overscroll-contain px-5 py-4">
         <p className="mb-4 text-[12px] leading-relaxed text-muted">
           已切换到仓库 · 会话:{sessionId}。你可以直接问我 Issue、PR、CI 或周报相关问题。
         </p>
@@ -207,9 +221,10 @@ export function ChatPanel({
                   <div className="text-[12px] leading-relaxed">
                     {/* 模型输出的是 markdown,按纯文本直出会看到一堆 ** 和 | 符号。
                         流式期间也会渲染 —— 半截的代码围栏由组件内部兜底。 */}
-                    <Markdown streaming={message.streaming && !message.content}>
-                      {message.content || message.streamingText || ""}
-                    </Markdown>
+                    <StreamingMarkdown
+                      text={message.content || message.streamingText || ""}
+                      streaming={Boolean(message.streaming && !message.content)}
+                    />
                     {message.streaming && !message.content ? (
                       <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse rounded-full bg-accent align-text-bottom" />
                     ) : null}

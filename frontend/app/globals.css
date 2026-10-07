@@ -78,6 +78,10 @@ html,
 body {
   height: 100%;
   margin: 0;
+  /* 页面整体不滚动:滚动只发生在各自的面板里。
+     否则对话一长,body 被撑高之后滚轮行为会很混乱。 */
+  overflow: hidden;
+  overscroll-behavior: none;
   background: rgb(var(--canvas));
   color: rgb(var(--ink));
   font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;

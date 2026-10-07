@@ -80,7 +80,9 @@ export default function CollaborationGraph({ runId }: { runId: number | null }) 
   if (runId === null) return null;
   if (error) return <div className="mt-2 text-[11px] text-danger">协作图加载失败:{error}</div>;
   if (!data) return <div className="mt-2 text-[11px] text-muted">正在读取共享发现板…</div>;
-  if (!view) return <div className="mt-2 text-[11px] text-muted">本次运行没有产生发现。</div>;
+  // 没有发现就**整个不渲染**。普通问答(单工具路径)本来就不会产生发现,
+  // 给它一个"本次运行没有产生发现"的空盒子只是噪音 —— 实测用户会以为功能坏了。
+  if (!view) return null;
 
   const dead = new Set(data.findings.map((f) => f.id).filter((id) => !data.active_finding_ids.includes(id)));
   const conflicted = new Set(data.conflicts.flatMap((c) => c.topic));
