@@ -1,0 +1,12 @@
+﻿--sunken = 3
+--accent = 19
+shadow-card = 1
+shadow-soft = 2
+shadow-pop = 2
+fade-in = 3
+bg-sunken = 1
+text-violet = 0
+accent-soft = 6
+neutral-soft = 4
+tabular-nums = 2
+line-clamp-2 = 1

@@ -12,11 +12,44 @@ import type {
   Repo,
 } from "./types";
 
+/**
+ * 角色令牌。配置了 `DEVFLOW_ROLE_TOKENS` 的部署里,
+ * **请求头里的角色名不再有任何作用** —— 服务端只认令牌。
+ * 所以这里必须真的带上令牌,否则界面在强制认证下连写操作都做不了。
+ *
+ * 存在 localStorage:刷新后不用重填。它只是本地凭据,和会话无关。
+ */
+const TOKEN_STORAGE_KEY = "devflow-role-token";
+
+export function getRoleToken(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    return window.localStorage.getItem(TOKEN_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+export function setRoleToken(token: string): void {
+  try {
+    if (token) window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    else window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+  } catch {
+    // 隐私模式下存不了就算了,本次会话仍可用
+  }
+}
+
+/** 每个请求都带上令牌(没配就不带,退回演示模式的行为)。 */
+function authHeaders(): Record<string, string> {
+  const token = getRoleToken();
+  return token ? { "X-DevFlow-Role-Token": token } : {};
+}
+
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 
 async function get<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+  const response = await fetch(`${API_BASE}${path}`, { cache: "no-store", headers: authHeaders() });
   if (!response.ok) {
     throw new Error(`${path} 返回 ${response.status}`);
   }
@@ -30,7 +63,7 @@ async function post<T>(
 ): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...headers },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const payload = await response.json().catch(() => ({}));

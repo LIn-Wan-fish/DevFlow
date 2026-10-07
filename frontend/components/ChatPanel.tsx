@@ -204,7 +204,7 @@ export function ChatPanel({
 
   return (
     <section className="flex h-full min-w-0 flex-1 flex-col bg-canvas">
-      <div ref={listRef} onScroll={onListScroll} className="flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+      <div ref={listRef} onScroll={onListScroll} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
         <p className="mb-4 text-[12px] leading-relaxed text-muted">
           已切换到仓库 · 会话:{sessionId}。你可以直接问我 Issue、PR、CI 或周报相关问题。
         </p>
@@ -281,7 +281,11 @@ export function ChatPanel({
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-line bg-panel px-4 py-3">
+            {/* shrink-0:输入区**不参与伸缩**。少了它,消息列表一长就会把这里
+          挤出可视区 —— 表现就是"输入框被推下去,点不到了"(实测踩到)。
+          min-h-0 配合 flex-1 用在上面的列表上:flex 子项默认 min-height:auto,
+          不加它列表会先撑大再滚动,同样会把下面顶出去。 */}
+      <div className="shrink-0 border-t border-line bg-panel px-4 py-3">
         <div className="mb-2.5 flex flex-wrap gap-1.5">
           {QUICK_PROMPTS.map((prompt) => (
             <button

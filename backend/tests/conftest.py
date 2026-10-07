@@ -30,6 +30,10 @@ os.environ["MCP_TRANSPORT"] = "inprocess"
 # 下一个测试就报 "Event loop is closed"(实测踩到)。
 # 真 Redis 的行为由 tests/test_cache.py 里显式构造 RedisCache 的用例覆盖。
 os.environ["REDIS_URL"] = ""
+# 单测跑**演示模式**(不配令牌)。.env 里可能配了真实令牌用于生产测试,
+# 不钉住的话所有不带令牌的请求都会 401 —— 单测就不该依赖部署配置。
+# 认证相关的行为由 tests/test_auth.py 显式构造配置来覆盖。
+os.environ["DEVFLOW_ROLE_TOKENS"] = ""
 
 import pytest  # noqa: E402
 from sqlalchemy import create_engine  # noqa: E402

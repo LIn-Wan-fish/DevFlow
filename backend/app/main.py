@@ -269,6 +269,36 @@ def api_redoc() -> HTMLResponse:
     return HTMLResponse(REDOC_HTML)
 
 
+# 令牌认证模式下,**默认所有 /api 都要带令牌**,只显式放行少数几个。
+#
+# 为什么不逐个接口挂依赖:那是「默认放行、显式保护」—— 漏挂一个接口就是一个
+# 敞开的洞。实测踩到过:写接口有保护,而读接口(仓库列表、审计日志)完全没挂,
+# 无效令牌甚至不带令牌都能读到数据。中间件是「默认保护、显式放行」,
+# 方向反过来才是安全的默认值。
+PUBLIC_PATHS = ("/api/health", "/api/auth/mode")
+
+
+@app.middleware("http")
+async def enforce_role_token(request, call_next):  # noqa: ANN001, ANN201
+    from fastapi.responses import JSONResponse
+
+    from app.api import auth as auth_api
+
+    path = request.url.path
+    # 预检必须放行:它本身不带凭据,拦掉会让浏览器以为整个跨域都不可用
+    if (request.method == "OPTIONS"
+            or not path.startswith("/api")
+            or path in PUBLIC_PATHS):
+        return await call_next(request)
+
+    if auth_api.is_enforced() and auth_api.resolve_role(request) is None:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "缺少或无效的角色令牌(X-DevFlow-Role-Token 或 Bearer)"},
+        )
+    return await call_next(request)
+
+
 for router in (chat.router, repos.router, issues.router, prs.router, ci.router,
                rag.router, drafts.router, memory.router, runs.router, eval_api.router,
                mcp_api.router, skills.router, auth.router, reports.router):

@@ -10,7 +10,7 @@ import ResizeHandle from "@/components/ResizeHandle";
 import ThemeToggle from "@/components/ThemeToggle";
 import { usePanelWidth } from "@/lib/usePanelWidth";
 import WorkspacePanel from "@/components/WorkspacePanel";
-import { api } from "@/lib/api";
+import { api, getRoleToken, setRoleToken } from "@/lib/api";
 import type { CiItem, Health, IssueGroupCounts, IssueItem, MemoryCandidate,
   MemoryEntry, PrItem, Repo } from "@/lib/types";
 
@@ -37,6 +37,9 @@ export default function WorkspacePage() {
   const [sessionId, setSessionId] = useState(1);
   const [quoted, setQuoted] = useState("");
   const [role, setRole] = useState("member");
+  // 令牌模式下的凭据。演示模式下留空即可。
+  const [token, setToken] = useState("");
+  useEffect(() => setToken(getRoleToken()), []);
   const [authMode, setAuthMode] = useState<{ enforced: boolean; mode: string } | null>(null);
   const [error, setError] = useState("");
 
@@ -153,6 +156,18 @@ export default function WorkspacePage() {
             <option value="viewer">viewer</option>
             <option value="maintainer">maintainer</option>
           </select>
+          {authMode?.enforced ? (
+            <input
+              type="password"
+              value={token}
+              onChange={(event) => {
+                setToken(event.target.value);
+                setRoleToken(event.target.value);
+              }}
+              placeholder="角色令牌(必填)"
+              className="w-[168px] rounded-lg border border-line bg-canvas px-2 py-1 text-[11px] outline-none transition-colors focus:border-accent/60"
+            />
+          ) : null}
           <span className={authMode && !authMode.enforced ? "text-warn" : "text-muted"}>
             {authMode && !authMode.enforced
               ? "⚠ 演示模式:未配置角色令牌,角色由前端选择,不构成认证(配置 DEVFLOW_ROLE_TOKENS 后启用令牌认证)"

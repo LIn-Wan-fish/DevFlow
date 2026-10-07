@@ -63,6 +63,20 @@ def _presented_token(request: Request) -> str | None:
     return request.headers.get(TOKEN_HEADER)
 
 
+def resolve_role(request: Request) -> str | None:
+    """解析角色,**失败返回 None 而不是抛异常**。
+
+    给中间件用:中间件要的是"这个请求能不能过",不需要区分
+    "没带令牌"还是"令牌不对" —— 那个区分只对 FastAPI 依赖有意义。
+    """
+    tokens = parse_role_tokens(settings.devflow_role_tokens)
+    if tokens:
+        presented = _presented_token(request)
+        return tokens.get(presented) if presented else None
+    # 演示模式下服务端无法证明身份,一律当成已通过(但会如实报告 enforced=false)
+    return (request.headers.get(ROLE_HEADER) or DEFAULT_ROLE).strip()
+
+
 async def get_role(request: Request) -> str:
     """FastAPI 依赖:解析当前请求的角色。"""
     tokens = parse_role_tokens(settings.devflow_role_tokens)

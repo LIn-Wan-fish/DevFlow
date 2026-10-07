@@ -1,4 +1,4 @@
-import { API_BASE } from "./api";
+import { API_BASE, getRoleToken } from "./api";
 import type { SseEvent } from "./types";
 
 export type ParsedChunk = {
@@ -71,7 +71,12 @@ export async function streamChat(
     response = await fetch(`${API_BASE}/api/chat/stream`, {
       method: "POST",
       // 角色走请求头,不放请求体:服务端只从头上解析角色
-      headers: { "Content-Type": "application/json", "X-DevFlow-Role": role },
+      // 令牌模式下角色名无效,必须带令牌;没配令牌时退回演示模式(角色名可被服务端读)
+      headers: {
+        "Content-Type": "application/json",
+        "X-DevFlow-Role": role,
+        ...(getRoleToken() ? { "X-DevFlow-Role-Token": getRoleToken() } : {}),
+      },
       body: JSON.stringify(payload),
       signal,
     });
