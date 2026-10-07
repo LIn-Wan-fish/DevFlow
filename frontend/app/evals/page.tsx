@@ -40,59 +40,71 @@ export default function EvalsPage() {
   };
 
   return (
-    <main className="mx-auto max-w-[1100px] p-6">
-      <header className="mb-4">
-        <h1 className="text-[18px] font-semibold">Evals</h1>
-        <p className="mt-1 text-[12px] text-muted">
+    <main className="mx-auto max-w-[1100px] p-8">
+      <header className="mb-6">
+        <h1 className="text-[22px] font-semibold tracking-tight">Evals</h1>
+        <p className="mt-1.5 max-w-[720px] text-[12px] leading-relaxed text-muted">
           固定评测集 + 硬规则检查。改动 Prompt、检索配置或工具逻辑后复跑同一组题,对比改善与退步。
         </p>
-        <a href="/" className="text-[12px] text-accent hover:underline">
+        <a
+          href="/"
+          className="mt-2 inline-block text-[12px] text-accent transition-opacity hover:opacity-80"
+        >
           ← 返回工作台
         </a>
       </header>
 
-      <div className="mb-4 flex items-center gap-3">
+      <div className="mb-6 flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={() => void run()}
           disabled={busy}
-          className="rounded bg-accent px-4 py-1.5 text-[12px] text-white disabled:opacity-40"
+          className="rounded-lg bg-accent px-5 py-2 text-[12px] font-medium text-white shadow-soft transition-opacity hover:opacity-90 disabled:opacity-40"
         >
           {busy ? "评测中…" : "运行评测"}
         </button>
-        <span className="text-[11px] text-muted">
+        <span className="rounded-md bg-sunken px-2 py-1 text-[11px] text-muted">
           mock 模式下 ragas 会显式跳过,不会用假数字充数
         </span>
       </div>
 
-      {error ? <p className="mb-3 text-[12px] text-danger">{error}</p> : null}
+      {error ? (
+        <p className="mb-4 rounded-lg border border-danger/25 bg-danger-soft px-3 py-2 text-[12px] text-danger">
+          {error}
+        </p>
+      ) : null}
       {result ? <EvalReport result={result} /> : null}
 
       {history.length ? (
-        <section className="mt-6">
-          <h2 className="mb-2 text-[13px] font-semibold">历史运行</h2>
-          <table className="w-full border-collapse text-[11px]">
-            <thead>
-              <tr className="border-b border-line text-left text-muted">
-                <th className="py-1">#</th>
-                <th>模式</th>
-                <th>通过</th>
-                <th>失败</th>
-                <th>ragas</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((run) => (
-                <tr key={run.id} className="border-b border-line">
-                  <td className="py-1">{run.id}</td>
-                  <td>{run.mode}</td>
-                  <td>{run.passed}</td>
-                  <td>{run.failed}</td>
-                  <td>{run.metrics?.ragas ?? "-"}</td>
+        <section className="mt-8">
+          <h2 className="mb-2.5 text-[14px] font-semibold tracking-tight">历史运行</h2>
+          <div className="overflow-hidden rounded-xl border border-line bg-panel">
+            <table className="w-full border-collapse text-[11px]">
+              <thead>
+                <tr className="border-b border-line bg-sunken text-left text-muted">
+                  <th className="px-3 py-2 font-medium">#</th>
+                  <th className="px-3 py-2 font-medium">模式</th>
+                  <th className="px-3 py-2 font-medium">通过</th>
+                  <th className="px-3 py-2 font-medium">失败</th>
+                  <th className="px-3 py-2 font-medium">ragas</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {history.map((run) => (
+                  <tr
+                    key={run.id}
+                    className="border-b border-line transition-colors last:border-0 hover:bg-hover"
+                  >
+                    <td className="px-3 py-2 tabular-nums">{run.id}</td>
+                    <td className="px-3 py-2">{run.mode}</td>
+                    <td className="px-3 py-2 tabular-nums">{run.passed}</td>
+                    <td className="px-3 py-2 tabular-nums">{run.failed}</td>
+                    <td className="px-3 py-2">{run.metrics?.ragas ?? "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       ) : null}
     </main>

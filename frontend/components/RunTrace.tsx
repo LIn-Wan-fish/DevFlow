@@ -24,19 +24,21 @@ export function RunTrace({
   if (!visible.length) return null;
 
   return (
-    <div className="mt-2 rounded border border-line bg-canvas">
+    <div className="mt-3 overflow-hidden rounded-xl border border-line bg-sunken">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-[11px] font-semibold text-muted"
+        className="flex w-full items-center gap-2 px-2.5 py-2 text-left text-[11px] font-semibold text-muted transition-colors hover:bg-hover hover:text-ink"
       >
-        <span>{open ? "▾" : "▸"}</span>
+        <span className="text-[9px]">{open ? "▾" : "▸"}</span>
         <span>执行轨迹</span>
-        <span className="ml-auto font-normal">{visible.length} 个事件</span>
+        <span className="ml-auto rounded-md bg-panel px-1.5 py-0.5 text-[10px] font-normal tabular-nums">
+          {visible.length} 个事件
+        </span>
       </button>
 
       {open ? (
-        <ol className="space-y-1 px-2 pb-2" data-testid="run-trace">
+        <ol className="space-y-1 border-t border-line px-2.5 py-2" data-testid="run-trace">
           {visible.map((event, index) => (
             <TraceRow
               key={`${event.event}-${index}`}
@@ -66,7 +68,7 @@ function TraceRow({
     const tasks = (data.tasks as any[]) ?? [];
     return (
       <li className="text-[11px]">
-        <span className="mr-1 rounded bg-ink px-1 text-white">规划</span>
+        <span className="mr-1.5 rounded-md bg-accent-soft px-1.5 py-0.5 text-[10px] text-accent">规划</span>
         {data.replan ? `重新规划(第 ${data.replan_count} 次)` : `拆出 ${tasks.length} 个任务`}
         <ul className="ml-4 mt-0.5 space-y-0.5 text-muted">
           {tasks.map((task) => (
@@ -83,7 +85,7 @@ function TraceRow({
   if (kind === "task_started") {
     return (
       <li className="text-[11px]">
-        <span className="mr-1 rounded bg-warn-soft px-1 text-warn">执行中</span>
+        <span className="mr-1.5 rounded-md bg-warn-soft px-1.5 py-0.5 text-[10px] text-warn">执行中</span>
         {data.title ?? data.task_key}({data.agent})
       </li>
     );
@@ -95,11 +97,11 @@ function TraceRow({
       status === "succeeded"
         ? "bg-ok-soft text-ok"
         : status === "skipped"
-          ? "bg-gray-200 text-gray-600"
+          ? "bg-neutral-soft text-neutral"
           : "bg-danger-soft text-danger";
     return (
       <li className="text-[11px]">
-        <span className={`mr-1 rounded px-1 ${color}`}>{status}</span>
+        <span className={`mr-1.5 rounded-md px-1.5 py-0.5 text-[10px] ${color}`}>{status}</span>
         {data.task_key}
         {data.error ? <span className="ml-1 text-danger">{data.error}</span> : null}
       </li>
@@ -109,7 +111,7 @@ function TraceRow({
   if (kind === "tool_call") {
     return (
       <li className="text-[11px]">
-        <span className="mr-1 rounded bg-info-soft px-1 text-info">调用</span>
+        <span className="mr-1.5 rounded-md bg-info-soft px-1.5 py-0.5 text-[10px] text-info">调用</span>
         <code>{data.tool}</code>
         {data.args && Object.keys(data.args).length ? (
           <span className="ml-1 text-muted">{JSON.stringify(data.args)}</span>
@@ -122,14 +124,14 @@ function TraceRow({
     if (data.error) {
       return (
         <li className="text-[11px] text-danger">
-          <span className="mr-1 rounded bg-danger-soft px-1">失败</span>
+          <span className="mr-1.5 rounded-md bg-danger-soft px-1.5 py-0.5 text-[10px]">失败</span>
           <code>{data.tool}</code> — {data.error}
         </li>
       );
     }
     return (
       <li className="text-[11px]">
-        <span className="mr-1 rounded bg-ok-soft px-1 text-ok">结果</span>
+        <span className="mr-1.5 rounded-md bg-ok-soft px-1.5 py-0.5 text-[10px] text-ok">结果</span>
         <code>{data.tool}</code>
         <span className="ml-1 text-muted">{data.summary}</span>
       </li>
@@ -141,7 +143,7 @@ function TraceRow({
     const conflicts = (data.conflicts as string[]) ?? [];
     return (
       <li className="text-[11px]">
-        <span className="mr-1 rounded bg-purple-100 px-1 text-purple-700">证据审查</span>
+        <span className="mr-1.5 rounded-md bg-violet-soft px-1.5 py-0.5 text-[10px] text-violet">证据审查</span>
         {conflicts.length ? (
           <ul className="ml-4 mt-0.5 list-disc space-y-0.5 text-danger">
             {conflicts.map((item, index) => (
@@ -201,7 +203,7 @@ function TraceRow({
   if (kind === "citation") {
     return (
       <li className="text-[11px] text-muted">
-        <span className="mr-1 rounded bg-gray-100 px-1">引用</span>
+        <span className="mr-1.5 rounded-md bg-neutral-soft px-1.5 py-0.5 text-[10px]">引用</span>
         {data.doc_path} &gt; {data.heading_path}
       </li>
     );

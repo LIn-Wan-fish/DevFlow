@@ -1,0 +1,421 @@
+/*
+ * DevFlow AI · Swagger UI 主题覆盖层。
+ *
+ * 为什么是覆盖而不是改 swagger-ui.css:那份文件是第三方产物,升级时会整份替换,
+ * 任何手改都会丢。这里只做覆盖,且**晚于** swagger-ui.css 加载,同级选择器以这里为准。
+ *
+ * 配色与前端工作台同源(暖米白 / 暖棕黑),见 frontend/app/globals.css。
+ * 深色走 prefers-color-scheme:文档页读不到前端的主题开关,跟随系统偏好是唯一诚实的做法。
+ */
+
+:root {
+  --df-canvas: #f4f1ea;
+  --df-panel: #fffdf9;
+  --df-sunken: #f9f6ef;
+  --df-ink: #262220;
+  --df-muted: #7e766a;
+  --df-line: #e7e0d5;
+  --df-accent: #b25c3c;
+  --df-accent-soft: #fbf0eb;
+  --df-get: #2b60aa;
+  --df-post: #2d7a4f;
+  --df-put: #a66814;
+  --df-delete: #b23a30;
+  --df-patch: #6a4aa8;
+  --df-shadow: 0 1px 2px rgba(60, 45, 30, 0.06), 0 4px 14px -6px rgba(60, 45, 30, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --df-canvas: #1a1715;
+    --df-panel: #221e1b;
+    --df-sunken: #1e1b18;
+    --df-ink: #ebe4db;
+    --df-muted: #a3998d;
+    --df-line: #3d3630;
+    --df-accent: #e38f6a;
+    --df-accent-soft: #3f261d;
+    --df-get: #8db4f1;
+    --df-post: #6fd09a;
+    --df-put: #e9bb5d;
+    --df-delete: #f08a7c;
+    --df-patch: #c7b1fb;
+    --df-shadow: none;
+  }
+}
+
+html,
+body {
+  background: var(--df-canvas) !important;
+  color: var(--df-ink);
+}
+
+.swagger-ui {
+  font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 13px;
+  color: var(--df-ink);
+}
+
+/* 顶栏:默认的 Swagger 绿换成暖棕黑,和前端侧栏的深色块同一套语言 */
+.swagger-ui .topbar {
+  background: #26221f;
+  border-bottom: 1px solid var(--df-line);
+  padding: 10px 0;
+}
+.swagger-ui .topbar .topbar-wrapper,
+.swagger-ui .topbar .download-url-wrapper {
+  align-items: center;
+}
+.swagger-ui .topbar .download-url-wrapper .select-label,
+.swagger-ui .topbar .download-url-wrapper input[type="text"] {
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f2ece4;
+  outline: none;
+}
+.swagger-ui .topbar .download-url-wrapper .download-url-button {
+  border-radius: 10px !important;
+  background: var(--df-accent) !important;
+  border-color: var(--df-accent) !important;
+  color: #fff !important;
+  font-weight: 500;
+}
+.swagger-ui .topbar .topbar-logo__img,
+.swagger-ui .topbar svg {
+  filter: grayscale(1) brightness(2.4);
+  opacity: 0.65;
+}
+
+/* 标题区 */
+.swagger-ui .info {
+  margin: 32px 0 20px;
+}
+.swagger-ui .info .title,
+.swagger-ui .info h1,
+.swagger-ui .info h2,
+.swagger-ui .info h3,
+.swagger-ui .info h4,
+.swagger-ui .info h5 {
+  font-family: inherit;
+  color: var(--df-ink);
+  font-weight: 600;
+}
+.swagger-ui .info .title small pre {
+  background: var(--df-accent-soft);
+  color: var(--df-accent);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.swagger-ui .info p,
+.swagger-ui .info li,
+.swagger-ui .info .base-url {
+  color: var(--df-muted);
+}
+.swagger-ui .main,
+.swagger-ui .scheme-container {
+  background: transparent;
+  box-shadow: none;
+}
+.swagger-ui .scheme-container {
+  background: var(--df-sunken);
+  border: 1px solid var(--df-line);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin: 0 0 20px;
+  box-shadow: var(--df-shadow);
+}
+
+/* 分组标题 */
+.swagger-ui .opblock-tag {
+  border-bottom: 1px solid var(--df-line);
+  margin: 24px 0 10px;
+  padding: 0 0 8px;
+}
+.swagger-ui .opblock-tag,
+.swagger-ui .opblock-tag a,
+.swagger-ui .opblock-tag small {
+  color: var(--df-ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+.swagger-ui .opblock-tag small {
+  color: var(--df-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* 接口条目:卡片化,圆角和阴影跟前端一致 */
+.swagger-ui .opblock {
+  border: 1px solid var(--df-line);
+  border-radius: 14px;
+  background: var(--df-panel);
+  box-shadow: var(--df-shadow);
+  margin: 0 0 12px;
+}
+.swagger-ui .opblock .opblock-summary {
+  border-bottom: none;
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+.swagger-ui .opblock.is-open .opblock-summary {
+  border-bottom: 1px solid var(--df-line);
+  border-radius: 14px 14px 0 0;
+}
+.swagger-ui .opblock .opblock-summary-path,
+.swagger-ui .opblock .opblock-summary-path__deprecated {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--df-ink);
+}
+.swagger-ui .opblock .opblock-summary-description,
+.swagger-ui .opblock-description-wrapper p,
+.swagger-ui .opblock-external-docs-wrapper p,
+.swagger-ui .opblock-title_normal p {
+  color: var(--df-muted);
+  font-size: 12px;
+}
+
+/* 方法色:换成前端那套色板,默认的荧光绿/亮橙在暖底上很跳 */
+.swagger-ui .opblock.opblock-get {
+  border-color: color-mix(in srgb, var(--df-get) 35%, transparent);
+  background: var(--df-panel);
+}
+.swagger-ui .opblock.opblock-get .opblock-summary {
+  border-left: 3px solid var(--df-get);
+}
+.swagger-ui .opblock.opblock-get .opblock-summary-method,
+.swagger-ui .opblock.opblock-get .tab-header .tab-item.active h4 span::after {
+  background: var(--df-get);
+}
+
+.swagger-ui .opblock.opblock-post {
+  border-color: color-mix(in srgb, var(--df-post) 35%, transparent);
+  background: var(--df-panel);
+}
+.swagger-ui .opblock.opblock-post .opblock-summary {
+  border-left: 3px solid var(--df-post);
+}
+.swagger-ui .opblock.opblock-post .opblock-summary-method,
+.swagger-ui .opblock.opblock-post .tab-header .tab-item.active h4 span::after {
+  background: var(--df-post);
+}
+
+.swagger-ui .opblock.opblock-put {
+  border-color: color-mix(in srgb, var(--df-put) 35%, transparent);
+  background: var(--df-panel);
+}
+.swagger-ui .opblock.opblock-put .opblock-summary {
+  border-left: 3px solid var(--df-put);
+}
+.swagger-ui .opblock.opblock-put .opblock-summary-method {
+  background: var(--df-put);
+}
+
+.swagger-ui .opblock.opblock-delete {
+  border-color: color-mix(in srgb, var(--df-delete) 35%, transparent);
+  background: var(--df-panel);
+}
+.swagger-ui .opblock.opblock-delete .opblock-summary {
+  border-left: 3px solid var(--df-delete);
+}
+.swagger-ui .opblock.opblock-delete .opblock-summary-method {
+  background: var(--df-delete);
+}
+
+.swagger-ui .opblock.opblock-patch {
+  border-color: color-mix(in srgb, var(--df-patch) 35%, transparent);
+  background: var(--df-panel);
+}
+.swagger-ui .opblock.opblock-patch .opblock-summary {
+  border-left: 3px solid var(--df-patch);
+}
+.swagger-ui .opblock.opblock-patch .opblock-summary-method {
+  background: var(--df-patch);
+}
+
+.swagger-ui .opblock .opblock-summary-method {
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 62px;
+  padding: 5px 8px;
+  text-shadow: none;
+}
+
+/* 展开后的分区头 */
+.swagger-ui .opblock .opblock-section-header {
+  background: var(--df-sunken);
+  border-bottom: 1px solid var(--df-line);
+  box-shadow: none;
+  padding: 10px 16px;
+}
+.swagger-ui .opblock .opblock-section-header h4,
+.swagger-ui .opblock .opblock-section-header label {
+  color: var(--df-ink);
+  font-size: 12px;
+}
+.swagger-ui .opblock .opblock-section-header .btn {
+  background: var(--df-panel);
+  border: 1px solid var(--df-line);
+  color: var(--df-muted);
+  border-radius: 8px;
+  font-size: 11px;
+  box-shadow: none;
+}
+
+/* 参数与模型表 */
+.swagger-ui .parameters-col_name,
+.swagger-ui .parameter__name,
+.swagger-ui .response-col_name {
+  color: var(--df-ink);
+  font-size: 12px;
+  font-weight: 500;
+}
+.swagger-ui .parameter__type,
+.swagger-ui .parameter__in,
+.swagger-ui .response-col_description {
+  color: var(--df-muted);
+  font-size: 11px;
+}
+.swagger-ui .parameter__in {
+  font-weight: 400;
+}
+.swagger-ui table thead tr th,
+.swagger-ui table thead tr td {
+  border-bottom: 1px solid var(--df-line);
+  color: var(--df-muted);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 8px 12px;
+}
+.swagger-ui table tbody tr td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--df-line);
+}
+.swagger-ui .model-container,
+.swagger-ui .responses-wrapper .responses-inner {
+  background: transparent;
+}
+.swagger-ui section.models {
+  border: 1px solid var(--df-line);
+  border-radius: 14px;
+  background: var(--df-panel);
+  box-shadow: var(--df-shadow);
+  margin: 24px 0 0;
+}
+.swagger-ui section.models h4,
+.swagger-ui section.models h5 {
+  color: var(--df-ink);
+}
+.swagger-ui section.models .model-container {
+  background: transparent;
+}
+.swagger-ui .model,
+.swagger-ui .model-title {
+  color: var(--df-ink);
+  font-size: 12px;
+}
+.swagger-ui .response-col_status {
+  color: var(--df-ink);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 按钮:试一试 / 执行 */
+.swagger-ui .btn {
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: none;
+  transition: opacity 0.15s ease;
+}
+.swagger-ui .btn:hover {
+  opacity: 0.88;
+}
+.swagger-ui .btn.execute,
+.swagger-ui .btn.authorize {
+  background: var(--df-accent);
+  border-color: var(--df-accent);
+  color: #fff;
+}
+.swagger-ui .btn.cancel {
+  background: transparent;
+  border-color: var(--df-line);
+  color: var(--df-muted);
+}
+.swagger-ui .btn-group .btn {
+  border-color: var(--df-line);
+}
+
+/* 表单控件 */
+.swagger-ui input[type="text"],
+.swagger-ui input[type="email"],
+.swagger-ui input[type="password"],
+.swagger-ui textarea,
+.swagger-ui select {
+  border: 1px solid var(--df-line);
+  border-radius: 10px;
+  background: var(--df-sunken);
+  color: var(--df-ink);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 8px 10px;
+}
+.swagger-ui textarea {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 11px;
+}
+.swagger-ui select {
+  padding: 6px 8px;
+}
+
+/* 代码块与响应体 */
+.swagger-ui .highlight-code > .microlight,
+.swagger-ui .responses-wrapper .highlight-code {
+  background: var(--df-sunken);
+  border-radius: 10px;
+}
+.swagger-ui .markdown pre,
+.swagger-ui .model-example pre,
+.swagger-ui .highlight-code pre {
+  background: var(--df-sunken) !important;
+  border: 1px solid var(--df-line);
+  border-radius: 10px;
+  color: var(--df-ink);
+  font-size: 11px;
+  padding: 12px;
+}
+.swagger-ui .markdown code,
+.swagger-ui .renderedMarkdown code,
+.swagger-ui .model code {
+  background: var(--df-sunken);
+  border: 1px solid var(--df-line);
+  border-radius: 6px;
+  color: var(--df-ink);
+  font-size: 11px;
+  padding: 1px 5px;
+}
+.swagger-ui .markdown p,
+.swagger-ui .renderedMarkdown p {
+  color: var(--df-muted);
+  font-size: 12px;
+}
+
+/* 弹窗 */
+.swagger-ui .dialog-ux .modal-ux {
+  border: 1px solid var(--df-line);
+  border-radius: 18px;
+  background: var(--df-panel);
+  box-shadow: 0 18px 44px -14px rgba(60, 45, 30, 0.3);
+}
+.swagger-ui .dialog-ux .modal-ux-header h3 {
+  color: var(--df-ink);
+  font-size: 14px;
+}
+.swagger-ui .dialog-ux .modal-ux-content h4,
+.swagger-ui .dialog-ux .modal-ux-content p {
+  color: var(--df-muted);
+  font-size: 12px;
+}

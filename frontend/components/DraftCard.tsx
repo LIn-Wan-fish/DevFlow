@@ -34,25 +34,27 @@ export function DraftCard({ draft, onConfirm, onReject }: Props) {
 
   return (
     <div
-      className={`mt-2 rounded border p-2 ${
-        isHighRisk ? "border-danger bg-danger-soft" : "border-line bg-canvas"
+      className={`mt-3 rounded-xl border p-3 shadow-soft ${
+        isHighRisk ? "border-danger/40 bg-danger-soft" : "border-line bg-sunken"
       }`}
       data-testid={`draft-${draft.id}`}
     >
-      <div className="flex items-center gap-2 text-[11px]">
-        <span className="rounded bg-ink px-1.5 py-0.5 text-white">草稿</span>
+      <div className="flex flex-wrap items-center gap-2 text-[11px]">
+        <span className="rounded-md bg-accent-soft px-1.5 py-0.5 text-[10px] text-accent">草稿</span>
         <span className="font-medium">{draft.action}</span>
         <span className="text-muted">→ {draft.target}</span>
         {isHighRisk ? (
-          <span className="rounded bg-danger px-1.5 py-0.5 text-white">高风险</span>
+          <span className="rounded-md bg-danger px-1.5 py-0.5 text-[10px] text-white">高风险</span>
         ) : null}
-        <span className="ml-auto text-muted">状态:{draft.status}</span>
+        <span className="ml-auto rounded-md bg-panel px-1.5 py-0.5 text-[10px] text-muted">
+          状态:{draft.status}
+        </span>
       </div>
 
-      <div className="mt-1 whitespace-pre-wrap text-[12px]">{draft.preview}</div>
+      <div className="mt-2 whitespace-pre-wrap text-[12px] leading-relaxed">{draft.preview}</div>
 
       {!decided ? (
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           {isHighRisk ? (
             <label className="flex items-center gap-1 text-[11px] text-danger">
               <input
@@ -67,7 +69,7 @@ export function DraftCard({ draft, onConfirm, onReject }: Props) {
             type="button"
             disabled={busy || (isHighRisk && !acknowledged)}
             onClick={handleConfirm}
-            className="rounded bg-accent px-2 py-1 text-[11px] text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg bg-accent px-3 py-1 text-[11px] font-medium text-white shadow-soft transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             确认执行
           </button>
@@ -75,7 +77,7 @@ export function DraftCard({ draft, onConfirm, onReject }: Props) {
             type="button"
             disabled={busy}
             onClick={() => onReject(draft.id)}
-            className="rounded border border-line px-2 py-1 text-[11px] hover:border-ink"
+            className="rounded-lg border border-line bg-panel px-3 py-1 text-[11px] transition-colors hover:border-accent/50 hover:text-accent disabled:opacity-40"
           >
             拒绝
           </button>

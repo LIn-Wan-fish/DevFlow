@@ -22,7 +22,7 @@ export default function ResizeHandle({
       aria-label={label}
       title={`拖动调整宽度(双击复位)`}
       className={`group relative z-10 w-[7px] shrink-0 cursor-col-resize ${
-        resizing ? "bg-accent/40" : "bg-transparent hover:bg-accent/30"
+        resizing ? "bg-accent/25" : "bg-transparent hover:bg-accent/15"
       }`}
       {...handlers}
     >

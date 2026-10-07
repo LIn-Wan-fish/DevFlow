@@ -24,7 +24,7 @@ export default function ThemeToggle() {
       onClick={toggle}
       title={theme === "dark" ? "切换到浅色" : "切换到深色"}
       aria-label={theme === "dark" ? "切换到浅色" : "切换到深色"}
-      className="flex h-6 w-6 items-center justify-center rounded border border-line text-[12px] text-muted hover:bg-hover hover:text-ink"
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line text-[12px] text-muted transition-colors hover:border-accent/50 hover:bg-accent-soft hover:text-accent"
     >
       {theme === "dark" ? "☀" : "☾"}
     </button>

@@ -40,21 +40,21 @@ export function ProjectSidebar({
 }: Props) {
   return (
     <aside style={{ width }} className="flex h-full shrink-0 flex-col border-r border-line bg-panel">
-      <div className="flex items-center gap-2 px-3 py-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded bg-ink text-[11px] font-bold text-white">
+      <div className="flex items-center gap-2.5 px-3 pb-1 pt-3.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-[11px] font-semibold tracking-tight text-white shadow-soft">
           DF
         </div>
-        <div className="leading-tight">
-          <div className="text-[14px] font-semibold">DevFlow AI</div>
-          <div className="text-[10px] text-muted">研发团队 PR / Issue 智能协作</div>
+        <div className="min-w-0 leading-tight">
+          <div className="truncate text-[14px] font-semibold tracking-tight">DevFlow AI</div>
+          <div className="truncate text-[10px] text-muted">研发团队 PR / Issue 智能协作</div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-3 py-2">
-        <span className="text-[11px] font-semibold tracking-wide text-muted">PROJECTS</span>
+      <div className="flex items-center justify-between px-3 pb-1.5 pt-3">
+        <span className="text-[10px] font-semibold tracking-[0.08em] text-muted">PROJECTS</span>
         <button
           onClick={onAddProject}
-          className="text-[11px] text-muted hover:text-ink"
+          className="text-[11px] text-muted transition-colors hover:text-accent"
           type="button"
         >
           项目
@@ -64,39 +64,44 @@ export function ProjectSidebar({
         <button
           type="button"
           onClick={onAddProject}
-          className="w-full rounded border border-dashed border-line px-2 py-1 text-[11px] text-muted hover:border-accent hover:text-accent"
+          className="w-full rounded-lg border border-dashed border-line px-2 py-1.5 text-[11px] text-muted transition-colors hover:border-accent/60 hover:bg-accent-soft hover:text-accent"
         >
           + 添加项目
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2">
+      <nav className="flex-1 overflow-y-auto px-2 pb-2">
         {repos.map((repo) => (
-          <div key={repo.id} className="mb-1">
+          <div key={repo.id} className="mb-1.5">
             <button
               type="button"
               onClick={() => onSelectRepo(repo.id)}
-              className={`flex w-full items-center gap-1 rounded px-2 py-1 text-left text-[12px] ${
-                repo.id === activeRepoId ? "bg-canvas font-medium" : "hover:bg-canvas"
+              className={`flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[12px] transition-colors ${
+                repo.id === activeRepoId
+                  ? "bg-accent-soft font-medium text-ink"
+                  : "text-muted hover:bg-hover hover:text-ink"
               }`}
             >
-              <span className="text-muted">▾</span>
+              <span className="text-[9px] text-muted">▾</span>
               <span className="truncate">{repo.name}</span>
             </button>
-            <ul className="ml-4 mt-0.5 space-y-0.5">
+            {/* 竖线做出树的层级,比单纯缩进更好读 */}
+            <ul className="ml-3 mt-1 space-y-0.5 border-l border-line pl-2">
               {sessions.map((session) => (
                 <li key={session.id}>
                   <button
                     type="button"
                     onClick={() => onSelectSession(session.id)}
-                    className={`flex w-full items-center justify-between rounded px-2 py-1 text-left text-[12px] ${
+                    className={`flex w-full items-center justify-between rounded-lg px-2 py-1 text-left text-[12px] transition-colors ${
                       `${repo.id}:${session.id}` === activeSession
-                        ? "bg-canvas text-accent"
-                        : "text-muted hover:bg-canvas"
+                        ? "bg-accent-soft font-medium text-accent"
+                        : "text-muted hover:bg-hover hover:text-ink"
                     }`}
                   >
                     <span className="truncate">{session.title}</span>
-                    <span className="ml-2 shrink-0 text-[10px] text-muted">{session.age}</span>
+                    <span className="ml-2 shrink-0 text-[10px] tabular-nums text-muted">
+                      {session.age}
+                    </span>
                   </button>
                 </li>
               ))}
@@ -105,11 +110,11 @@ export function ProjectSidebar({
         ))}
       </nav>
 
-      <div className="flex items-center gap-2 border-t border-line p-2">
+      <div className="flex items-center gap-2 border-t border-line p-2.5">
         <button
           type="button"
           onClick={onRefresh}
-          className="flex-1 rounded border border-line px-2 py-1.5 text-[12px] hover:border-accent hover:text-accent"
+          className="flex-1 rounded-lg border border-line px-2 py-1.5 text-[12px] text-muted transition-colors hover:border-accent/50 hover:text-accent"
         >
           刷新当前项目
         </button>

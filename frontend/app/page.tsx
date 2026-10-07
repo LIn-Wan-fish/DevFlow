@@ -123,7 +123,7 @@ export default function WorkspacePage() {
 
       <main className="flex h-full min-w-0 flex-1 flex-col">
         {repos.length === 0 ? (
-          <div className="border-b border-line bg-warn-soft px-4 py-3 text-[12px] text-warn">
+          <div className="border-b border-line bg-warn-soft px-5 py-3 text-[12px] leading-relaxed text-warn">
             当前没有任何仓库数据。
             {error ? ` (${error})` : ""}
             若 <code>DATA_SOURCE=github</code>,请配置 <code>GITHUB_TOKEN</code> 与{" "}
@@ -137,17 +137,17 @@ export default function WorkspacePage() {
             onRefresh={() => void reload()}
           />
         ) : (
-          <div className="border-b border-line bg-panel px-4 py-3 text-[12px] text-muted">
+          <div className="border-b border-line bg-panel px-5 py-3 text-[12px] text-muted">
             {error ? `加载失败:${error}` : "正在加载总览…"}
           </div>
         )}
 
-        <div className="flex items-center gap-2 border-b border-line bg-panel px-4 py-1 text-[11px]">
+        <div className="flex flex-wrap items-center gap-2 border-b border-line bg-panel px-5 py-2 text-[11px]">
           <span className="text-muted">当前角色</span>
           <select
             value={role}
             onChange={(event) => setRole(event.target.value)}
-            className="rounded border border-line px-1 py-0.5"
+            className="rounded-lg border border-line bg-canvas px-2 py-1 text-[11px] outline-none transition-colors focus:border-accent/60"
           >
             <option value="member">member</option>
             <option value="viewer">viewer</option>

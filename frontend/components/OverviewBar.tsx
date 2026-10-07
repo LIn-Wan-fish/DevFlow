@@ -22,18 +22,25 @@ type Props = {
 export function OverviewBar({ health, repo, session, onRefresh }: Props) {
   return (
     <div className="border-b border-line bg-panel">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 text-[12px]">
-        <span className="font-semibold">总览</span>
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 px-4 py-2.5 text-[12px]">
+        <span className="text-[13px] font-semibold tracking-tight">总览</span>
         <span className="text-muted">当前代码仓</span>
-        <span className="rounded bg-canvas px-2 py-0.5">{repo}</span>
+        <span className="rounded-full bg-sunken px-2.5 py-0.5 text-[11px] text-ink">{repo}</span>
         <span className="text-muted">会话: {session}</span>
-        <span className="ml-auto rounded border border-accent px-2 py-0.5 text-[11px] text-accent">
+        <span className="ml-auto rounded-full bg-accent-soft px-2.5 py-0.5 text-[11px] font-medium text-accent">
           Production Workspace
         </span>
-        <button type="button" className="text-muted hover:text-ink">
+        <button
+          type="button"
+          className="rounded-lg px-2 py-0.5 text-muted transition-colors hover:bg-hover hover:text-ink"
+        >
           管理项目
         </button>
-        <button type="button" onClick={onRefresh} className="text-muted hover:text-ink">
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="rounded-lg px-2 py-0.5 text-muted transition-colors hover:bg-hover hover:text-accent"
+        >
           刷新
         </button>
       </div>
@@ -45,11 +52,15 @@ export function OverviewBar({ health, repo, session, onRefresh }: Props) {
           return (
             <div
               key={card.key}
-              className="rounded border border-line bg-canvas px-2 py-1.5 text-center"
+              className={`rounded-xl border px-2.5 py-2 text-center transition-colors ${
+                highlight
+                  ? "border-danger/30 bg-danger-soft"
+                  : "border-line bg-sunken hover:border-line/80"
+              }`}
             >
-              <div className="text-[11px] text-muted">{card.label}</div>
+              <div className="truncate text-[11px] text-muted">{card.label}</div>
               <div
-                className={`text-[18px] font-semibold leading-tight ${
+                className={`text-[20px] font-semibold leading-tight tabular-nums ${
                   highlight ? "text-danger" : "text-ink"
                 }`}
               >

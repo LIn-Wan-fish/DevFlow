@@ -64,7 +64,7 @@ export default function ReportsPanel({ repoId }: { repoId: number }) {
   return (
     <div className="flex flex-col gap-2 text-[12px]">
       {scheduler ? (
-        <div className="rounded border border-line bg-canvas px-2 py-1.5 text-[11px] text-muted">
+        <div className="rounded-lg border border-line bg-sunken px-2.5 py-2 text-[11px] leading-relaxed text-muted">
           自动周报:{scheduler.enabled ? "已开启" : "已关闭"} · 每{" "}
           {Math.round(scheduler.check_seconds / 60)} 分钟检查一次 · 统计窗口{" "}
           {scheduler.days} 天 · 当前周期 <code>{scheduler.current_period}</code>
@@ -74,7 +74,7 @@ export default function ReportsPanel({ repoId }: { repoId: number }) {
       <div className="flex items-center justify-between">
         <span className="text-muted">共 {items.length} 份</span>
         <button
-          className="rounded border border-line px-2 py-0.5 disabled:opacity-50"
+          className="rounded-lg border border-line bg-panel px-2.5 py-1 text-[11px] transition-colors hover:border-accent/50 hover:text-accent disabled:opacity-50"
           disabled={busy}
           onClick={generate}
         >
@@ -83,13 +83,15 @@ export default function ReportsPanel({ repoId }: { repoId: number }) {
       </div>
 
       {error ? (
-        <div className="rounded bg-danger-soft px-2 py-1 text-[11px] text-danger">{error}</div>
+        <div className="rounded-lg border border-danger/25 bg-danger-soft px-2.5 py-1.5 text-[11px] text-danger">
+          {error}
+        </div>
       ) : null}
 
       {items.map((item) => (
         <button
           key={item.id}
-          className="rounded border border-line px-2 py-1.5 text-left hover:bg-canvas"
+          className="rounded-xl border border-line bg-panel px-2.5 py-2 text-left shadow-soft transition-all hover:border-accent/40 hover:shadow-card"
           onClick={() => open(item.id)}
         >
           <div className="flex items-center justify-between">
@@ -103,7 +105,7 @@ export default function ReportsPanel({ repoId }: { repoId: number }) {
       ))}
 
       {body ? (
-        <div className="max-h-72 overflow-auto rounded border border-line bg-canvas p-2">
+        <div className="max-h-72 overflow-auto rounded-xl border border-line bg-sunken p-3">
           <Markdown>{body.body}</Markdown>
         </div>
       ) : null}

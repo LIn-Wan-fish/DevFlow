@@ -42,31 +42,33 @@ const COMPONENTS: Components = {
     </a>
   ),
   blockquote: ({ children }) => (
-    <blockquote className="my-2 border-l-2 border-line pl-3 text-muted">{children}</blockquote>
+    <blockquote className="my-2.5 rounded-r-lg border-l-2 border-accent/50 bg-sunken py-1 pl-3 pr-2 text-muted">
+      {children}
+    </blockquote>
   ),
   hr: () => <hr className="my-3 border-line" />,
   // 代码块:横向可滚动,不折行 —— 折行会把代码结构弄乱
   pre: ({ children }) => (
-    <pre className="my-2 overflow-x-auto rounded border border-line bg-ink/[0.04] p-2.5
+    <pre className="my-2.5 overflow-x-auto rounded-lg border border-line bg-sunken p-3
                     font-mono text-[11px] leading-relaxed">{children}</pre>
   ),
   code: ({ className, children, ...props }) =>
     isBlockCode(className, children) ? (
       <code className={(className ?? "") + " font-mono"} {...props}>{children}</code>
     ) : (
-      <code className="rounded bg-ink/10 px-1 py-0.5 font-mono text-[11px]" {...props}>
+      <code className="rounded bg-ink/[0.07] px-1 py-0.5 font-mono text-[11px]" {...props}>
         {children}
       </code>
     ),
   table: ({ children }) => (
-    <div className="my-2 overflow-x-auto">
+    <div className="my-2.5 overflow-x-auto rounded-lg border border-line">
       <table className="w-full border-collapse text-[11px]">{children}</table>
     </div>
   ),
   th: ({ children }) => (
-    <th className="border border-line bg-ink/[0.04] px-2 py-1 text-left font-medium">{children}</th>
+    <th className="border border-line bg-sunken px-2 py-1.5 text-left font-medium">{children}</th>
   ),
-  td: ({ children }) => <td className="border border-line px-2 py-1 align-top">{children}</td>,
+  td: ({ children }) => <td className="border border-line px-2 py-1.5 align-top">{children}</td>,
 };
 
 export default function Markdown({

@@ -8,49 +8,70 @@
  *
  * 值写成 "R G B" 三通道,是为了让 Tailwind 的透明度修饰符能用:
  * bg-ink/10、bg-ink/[0.04] 这类写法都依赖 <alpha-value> 占位。
+ *
+ * 基调:暖米白 / 暖棕黑。底色带一点点暖灰而不是纯白,卡片比底色更亮 ——
+ * 靠「底色压暗、卡片提亮」区分层级,而不是全靠描边。
  */
 :root {
   color-scheme: light;
 
-  --canvas: 246 247 249;      /* 页面底色 */
-  --panel: 255 255 255;       /* 卡片/侧栏底色 */
-  --ink: 31 41 51;            /* 主文字,也用作深色按钮底 */
-  --muted: 107 114 128;       /* 次要文字 */
-  --line: 229 231 235;        /* 描边 */
-  --accent: 20 184 166;
-  --hover: 243 244 246;
+  --canvas: 244 241 234;      /* 页面底色:暖米白 */
+  --panel: 255 253 249;       /* 卡片/侧栏:比底色更亮 */
+  --sunken: 249 246 239;      /* 内嵌块:统计格、代码块、轨迹底 */
+  --ink: 38 34 30;            /* 主文字,也用作深色按钮底 */
+  --muted: 126 118 106;       /* 次要文字 */
+  --line: 231 224 213;        /* 描边 */
+  --accent: 178 92 60;        /* 陶土橙 */
+  --accent-soft: 251 240 235;
+  --hover: 244 239 230;
 
-  --danger: 185 28 28;
-  --danger-soft: 254 242 242;
-  --ok: 4 120 87;
-  --ok-soft: 236 253 245;
-  --warn: 180 83 9;
-  --warn-soft: 255 251 235;
-  --info: 29 78 216;
-  --info-soft: 239 246 255;
+  --neutral: 126 118 106;
+  --neutral-soft: 244 239 230;
+  --violet: 106 74 168;
+  --violet-soft: 242 238 251;
+
+  --danger: 178 58 48;
+  --danger-soft: 253 238 236;
+  --ok: 40 118 76;
+  --ok-soft: 236 247 240;
+  --warn: 166 104 18;
+  --warn-soft: 253 245 228;
+  --info: 42 96 168;
+  --info-soft: 237 243 251;
+
+  --shadow: 60 45 30;         /* 阴影色。跟着底色走暖调,灰阴影在米白上会发脏 */
 }
 
 .dark {
   color-scheme: dark;
 
-  --canvas: 13 18 26;
-  --panel: 21 27 36;
-  --ink: 226 232 240;
-  --muted: 148 163 184;
-  --line: 45 55 72;
-  --accent: 45 212 191;
-  --hover: 30 38 50;
+  --canvas: 26 23 21;
+  --panel: 34 30 27;
+  --sunken: 30 27 24;
+  --ink: 235 228 219;
+  --muted: 163 153 141;
+  --line: 61 54 48;
+  --accent: 227 143 106;
+  --accent-soft: 63 38 29;
+  --hover: 46 41 37;
+
+  --neutral: 163 153 141;
+  --neutral-soft: 46 41 37;
+  --violet: 199 177 251;
+  --violet-soft: 44 35 64;
 
   /* 状态色在深色底上要**提亮 + 降饱和**,否则红绿糊成一团;
      对应的底色则要**压暗**,不然在深色界面上是一块刺眼的白斑。 */
-  --danger: 248 113 113;
-  --danger-soft: 60 25 28;
-  --ok: 52 211 153;
-  --ok-soft: 18 48 40;
-  --warn: 251 191 36;
-  --warn-soft: 56 43 14;
-  --info: 125 179 250;
-  --info-soft: 22 38 64;
+  --danger: 240 138 124;
+  --danger-soft: 66 34 31;
+  --ok: 111 208 154;
+  --ok-soft: 22 50 38;
+  --warn: 233 187 93;
+  --warn-soft: 59 46 20;
+  --info: 141 183 241;
+  --info-soft: 26 42 65;
+
+  --shadow: 0 0 0;
 }
 
 html,
@@ -61,22 +82,33 @@ body {
   color: rgb(var(--ink));
   font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 13px;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
   box-sizing: border-box;
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* 键盘焦点的统一形态。用 outline 而不是 ring:不会挤占布局,也不受圆角继承影响 */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid rgb(var(--accent) / 0.55);
+  outline-offset: 1px;
 }
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+/* 滑块留 3px 透明边,做出「嵌在轨道里」的细条,比整块实心轻 */
 ::-webkit-scrollbar-thumb {
-  background: rgb(var(--muted) / 0.35);
-  border-radius: 4px;
+  background: rgb(var(--muted) / 0.3);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(var(--muted) / 0.55);
+  background: rgb(var(--muted) / 0.5);
+  background-clip: content-box;
 }
 ::-webkit-scrollbar-track {
   background: transparent;

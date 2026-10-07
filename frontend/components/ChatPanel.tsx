@@ -178,20 +178,20 @@ export function ChatPanel({
   };
 
   return (
-    <section className="flex h-full min-w-0 flex-1 flex-col bg-panel">
-      <div className="flex-1 overflow-y-auto px-4 py-3">
-        <p className="mb-3 text-[12px] text-muted">
+    <section className="flex h-full min-w-0 flex-1 flex-col bg-canvas">
+      <div className="flex-1 overflow-y-auto px-5 py-4">
+        <p className="mb-4 text-[12px] leading-relaxed text-muted">
           已切换到仓库 · 会话:{sessionId}。你可以直接问我 Issue、PR、CI 或周报相关问题。
         </p>
 
         {messages.map((message) => (
-          <div key={message.id} className="mb-3">
+          <div key={message.id} className="mb-4 animate-fade-in">
             {message.role === "user" ? (
-              <div className="ml-auto w-fit max-w-[80%] rounded bg-ink px-3 py-1.5 text-[12px] text-white">
+              <div className="ml-auto w-fit max-w-[80%] rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-[12px] leading-relaxed text-white shadow-soft">
                 {message.content}
               </div>
             ) : (
-              <div className="max-w-[95%] rounded border border-line bg-canvas p-2">
+              <div className="max-w-[95%] rounded-2xl border border-line bg-panel p-3 shadow-soft">
                 {message.content || message.streamingText ? (
                   <div className="text-[12px] leading-relaxed">
                     {/* 模型输出的是 markdown,按纯文本直出会看到一堆 ** 和 | 符号。
@@ -200,11 +200,14 @@ export function ChatPanel({
                       {message.content || message.streamingText || ""}
                     </Markdown>
                     {message.streaming && !message.content ? (
-                      <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse bg-ink align-text-bottom" />
+                      <span className="ml-0.5 inline-block h-3 w-1.5 animate-pulse rounded-full bg-accent align-text-bottom" />
                     ) : null}
                   </div>
                 ) : message.streaming ? (
-                  <div className="text-[12px] text-muted">正在取证与分析…</div>
+                  <div className="flex items-center gap-1.5 text-[12px] text-muted">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+                    正在取证与分析…
+                  </div>
                 ) : null}
 
                 <RunTrace
@@ -224,13 +227,13 @@ export function ChatPanel({
                 ))}
 
                 {message.error ? (
-                  <div className="mt-2 rounded bg-danger-soft px-2 py-1 text-[11px] text-danger">
+                  <div className="mt-2 rounded-lg border border-danger/25 bg-danger-soft px-2.5 py-1.5 text-[11px] text-danger">
                     {message.error}
                   </div>
                 ) : null}
 
                 {message.stopReason && message.stopReason !== "completed" ? (
-                  <div className="mt-1 text-[10px] text-warn">
+                  <div className="mt-1.5 text-[10px] text-warn">
                     停止原因:{message.stopReason}(已执行 {message.steps} 步)
                     {message.stopReason === "cancelled" ? "(已中断,后端不会再继续调用模型)" : ""}
                   </div>
@@ -248,22 +251,23 @@ export function ChatPanel({
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-line px-3 py-2">
-        <div className="mb-2 flex flex-wrap gap-1">
+      <div className="border-t border-line bg-panel px-4 py-3">
+        <div className="mb-2.5 flex flex-wrap gap-1.5">
           {QUICK_PROMPTS.map((prompt) => (
             <button
               key={prompt}
               type="button"
               disabled={streaming}
               onClick={() => send(prompt)}
-              className="rounded-full border border-line px-2 py-1 text-[10px] text-muted hover:border-accent hover:text-accent disabled:opacity-40"
+              className="rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] text-muted transition-colors hover:border-accent/50 hover:bg-accent-soft hover:text-accent disabled:opacity-40"
             >
               {prompt}
             </button>
           ))}
         </div>
 
-        <div className="flex items-end gap-2">
+        {/* 输入框做成一张「卡片」,边框和焦点态都挂在外层 —— 内部控件保持无边框 */}
+        <div className="flex items-end gap-2 rounded-2xl border border-line bg-canvas p-2 shadow-soft transition-colors focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/15">
           <textarea
             value={input}
             rows={2}
@@ -276,13 +280,13 @@ export function ChatPanel({
             }}
             placeholder="输入消息,问问当前代码仓…"
             disabled={streaming}
-            className="flex-1 resize-none rounded border border-line px-2 py-1.5 text-[12px] outline-none focus:border-accent disabled:bg-canvas"
+            className="flex-1 resize-none bg-transparent px-2 py-1.5 text-[12px] leading-relaxed outline-none placeholder:text-muted/70 focus-visible:outline-none disabled:opacity-60"
           />
           {streaming ? (
             <button
               type="button"
               onClick={() => abortRef.current?.abort()}
-              className="rounded border border-line px-3 py-2 text-[12px] hover:border-ink"
+              className="shrink-0 rounded-xl border border-line bg-panel px-3.5 py-2 text-[12px] text-muted transition-colors hover:border-accent/50 hover:text-accent"
             >
               停止
             </button>
@@ -291,7 +295,7 @@ export function ChatPanel({
               type="button"
               onClick={() => void send(input)}
               disabled={!input.trim()}
-              className="rounded bg-accent px-3 py-2 text-[12px] text-white disabled:opacity-40"
+              className="shrink-0 rounded-xl bg-accent px-4 py-2 text-[12px] font-medium text-white shadow-soft transition-opacity hover:opacity-90 disabled:opacity-40"
             >
               发送
             </button>

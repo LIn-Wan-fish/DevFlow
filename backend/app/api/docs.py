@@ -25,6 +25,7 @@ SWAGGER_HTML = """<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DevFlow AI · API 文档</title>
   <link rel="stylesheet" href="/static/swagger/swagger-ui.css">
+  <link rel="stylesheet" href="/static/swagger/devflow-docs.css">
   <link rel="icon" href="/static/swagger/favicon-32x32.png">
   <style>body { margin: 0; }</style>
 </head>

@@ -16,28 +16,42 @@ export function RecallStages({ trace }: { trace: RecallTrace }) {
       {STAGES.map((stage) => {
         const hits = (trace?.[stage.key] as RecallHit[]) ?? [];
         return (
-          <div key={String(stage.key)} className="rounded border border-line bg-panel">
-            <div className="flex items-baseline gap-2 border-b border-line px-2 py-1.5">
+          <div
+            key={String(stage.key)}
+            className="flex flex-col overflow-hidden rounded-xl border border-line bg-panel shadow-soft"
+          >
+            <div className="flex items-baseline gap-2 border-b border-line bg-sunken px-3 py-2.5">
               <span className="text-[12px] font-semibold">{stage.label}</span>
-              <span className="text-[10px] text-muted">{stage.hint}</span>
-              <span className="ml-auto text-[11px] text-muted">{hits.length}</span>
+              <span className="truncate text-[10px] text-muted">{stage.hint}</span>
+              <span className="ml-auto shrink-0 rounded-md bg-panel px-1.5 py-0.5 text-[10px] tabular-nums text-muted">
+                {hits.length}
+              </span>
             </div>
-            <ul className="space-y-1 p-2">
+            <ul className="flex-1 space-y-2 p-2.5">
               {hits.map((hit) => (
-                <li key={`${stage.key}-${hit.chunk_id}`} className="text-[11px]">
-                  <div className="font-medium">
+                <li
+                  key={`${stage.key}-${hit.chunk_id}`}
+                  className="rounded-lg border border-line bg-canvas p-2 text-[11px]"
+                >
+                  <div className="truncate font-medium">
                     {hit.doc_path}
                     {hit.heading_path ? (
                       <span className="text-muted"> &gt; {hit.heading_path}</span>
                     ) : null}
                   </div>
-                  <div className="line-clamp-2 text-muted">{hit.preview}</div>
+                  <div className="mt-1 line-clamp-2 leading-relaxed text-muted">{hit.preview}</div>
                   {typeof hit.score === "number" ? (
-                    <div className="text-[10px] text-muted">score {hit.score}</div>
+                    <div className="mt-1 text-[10px] tabular-nums text-muted">
+                      score {hit.score}
+                    </div>
                   ) : null}
                 </li>
               ))}
-              {!hits.length ? <li className="text-[11px] text-muted">无命中</li> : null}
+              {!hits.length ? (
+                <li className="rounded-lg border border-dashed border-line p-3 text-center text-[11px] text-muted">
+                  无命中
+                </li>
+              ) : null}
             </ul>
           </div>
         );
