@@ -5,10 +5,21 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { streamChat } from "@/lib/sse";
 import type { ChatMessage, SseEvent } from "@/lib/types";
+import CollaborationGraph from "./CollaborationGraph";
 import DraftCard from "./DraftCard";
 import EvidenceList from "./EvidenceList";
 import Markdown from "./Markdown";
 import RunTrace from "./RunTrace";
+
+/**
+ * 从这条消息的事件流里取 run_id。
+ * `run_started` 事件带着它 —— 不想为它单独扩 ChatMessage 的类型。
+ */
+function runIdOf(message: ChatMessage): number | null {
+  const started = (message.events ?? []).find((e) => e.event === "run_started");
+  const id = started?.data?.run_id;
+  return typeof id === "number" ? id : null;
+}
 
 const QUICK_PROMPTS = [
   "Issue #3: Feature: 增加桌面化能力 应该分给谁?",
@@ -209,6 +220,10 @@ export function ChatPanel({
                     正在取证与分析…
                   </div>
                 ) : null}
+
+                {/* 协作图:这次运行里各个 Agent 的发现与它们之间的引用关系。
+                    没有 run_id 就不渲染 —— 那说明这次不是多 Agent 工作流。 */}
+                <CollaborationGraph runId={runIdOf(message)} />
 
                 <RunTrace
                   events={message.events ?? []}

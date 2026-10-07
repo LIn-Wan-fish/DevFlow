@@ -60,6 +60,19 @@ _EXPLICIT_RE = re.compile(r"\b(pr|ci|issue)\s*#?\s*(\d+)", re.IGNORECASE)
 _PRIORITY_ORDER = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
 
 
+def _finding_ids_of(db: Session, run_id: int, task_keys: list[str]) -> set[int]:
+    """这些任务各自产出的发现 id。用于建立「谁基于谁」的引用边。"""
+    if not task_keys:
+        return set()
+    rows = db.scalars(
+        select(m.AgentFinding.id).where(
+            m.AgentFinding.run_id == run_id,
+            m.AgentFinding.task_id.in_(task_keys),
+        )
+    ).all()
+    return {int(r) for r in rows}
+
+
 @dataclass
 class WorkflowOutcome:
     answer: str
@@ -304,12 +317,17 @@ async def run_workflow(
                     # 带作者、带依据、落库不可改。后续 Agent 与 Observer 都读它,
                     # 而不是各自把结果交回终点后彼此看不见。
                     if run_id is not None:
+                        # 引用关系从**已知的事实**里取,不靠猜:
+                        # 这个任务依赖了谁,就是读了谁的结论。
+                        # 有这条边,协作才不是一串平铺的流水账,而是一张图。
+                        upstream = _finding_ids_of(db, run_id, task.get("depends_on") or [])
                         finding = board.publish(
                             db, run_id=run_id, repo_id=repo_id,
                             author=task["agent"], topic=topic,
                             conclusion=summary or task["agent"],
                             evidence=list(_refs(task)),
                             confidence=0.7,
+                            references=sorted(upstream),
                             task_id=task.get("task_key"),
                         )
                         await emit_event(emit, "finding", {
@@ -515,6 +533,22 @@ async def run_workflow(
     answer = final.get("conclusion") or "未能形成结论。"
     if next_steps:
         answer = answer + "\n\n下一步建议:\n" + "\n".join(f"- {s}" for s in next_steps)
+
+    # 综合节点也落一条发现,并引用它读过的**全部**发现。
+    # 没有这个汇聚点,协作图就是一堆互不相连的孤立节点,看不出结论是怎么合成的。
+    if run_id is not None:
+        try:
+            consumed = [f.id for f in board.read(db, run_id)]
+            if consumed:
+                board.publish(
+                    db, run_id=run_id, repo_id=repo_id,
+                    author="synthesis", topic="综合结论",
+                    conclusion=answer, evidence=[],
+                    confidence=0.7, references=consumed,
+                )
+        except Exception:  # noqa: BLE001
+            # 落板失败不该把已经跑完的结论丢掉 —— 结论本身已经算出来了
+            logger.exception("综合结论未能写入发现板")
 
     return WorkflowOutcome(
         answer=answer,

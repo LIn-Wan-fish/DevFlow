@@ -90,6 +90,19 @@ export const api = {
     }>("/api/repos", { full_name: fullName }),
   syncRepo: (repoId: number) =>
     post<{ repo: string; counts: Record<string, number> }>(`/api/repos/${repoId}/sync`),
+  findings: (runId: number) =>
+    get<{
+      run_id: number;
+      findings: {
+        id: number; author: string; topic: string; conclusion: string;
+        confidence: number; status: string; references: number[];
+        supersedes_id: number | null; created_at: string | null;
+      }[];
+      active_finding_ids: number[];
+      edges: { from: number; to: number }[];
+      conflicts: { topic: string; authors: string[]; conclusions: string[] }[];
+      authors: string[];
+    }>(`/api/runs/${runId}/findings`),
   reports: (repoId: number) =>
     get<{
       total: number;
